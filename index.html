@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+aa<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -755,6 +755,181 @@
 
   /* shadow on file-area */
   .file-area { position: relative; }
+
+  /* =========================================
+     ACCESS DENIED OVERLAY
+     ========================================= */
+  #accessDeniedOverlay {
+    position: fixed; inset: 0;
+    background: rgba(10, 25, 50, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: adFadeIn 0.25s ease;
+  }
+  @keyframes adFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .ad-panel {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 36px 32px;
+    width: 400px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 32px 80px rgba(10,25,60,0.28), 0 0 0 1px rgba(15,111,186,0.08);
+    animation: adSlideIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+    overflow: hidden;
+  }
+  @keyframes adSlideIn {
+    from { opacity: 0; transform: scale(0.88) translateY(20px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* top red stripe */
+  .ad-panel::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #e03d3d, #c8152b, #e03d3d);
+  }
+
+  /* subtle watermark cross */
+  .ad-panel::after {
+    content: '✚';
+    position: absolute; bottom: -12px; right: 12px;
+    font-size: 80px;
+    color: rgba(15,111,186,0.04);
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .ad-icon-wrap {
+    position: relative;
+    width: 80px; height: 80px;
+    margin: 0 auto 18px;
+  }
+
+  .ad-icon-ring {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(224,61,61,0.18);
+    animation: adPulse 2.2s ease infinite;
+  }
+  .ad-ring2 {
+    inset: -8px;
+    border-color: rgba(224,61,61,0.09);
+    animation-delay: 0.4s;
+  }
+  @keyframes adPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.06); opacity: 0.5; }
+  }
+
+  .ad-icon-core {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #e03d3d, #b01020);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(224,61,61,0.38);
+  }
+
+  .ad-code {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: #e03d3d;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    opacity: 0.8;
+  }
+
+  .ad-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a2638;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+
+  .ad-msg {
+    font-size: 13px;
+    color: #5a6e85;
+    line-height: 1.65;
+    margin-bottom: 20px;
+  }
+
+  .ad-file-info {
+    background: #f7f9fc;
+    border: 1px solid #dce5ef;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 22px;
+    font-size: 12px;
+    color: #1a2638;
+    font-weight: 600;
+    display: flex; align-items: center; gap: 10px;
+    text-align: left;
+  }
+  .ad-file-info-icon { font-size: 20px; flex-shrink: 0; }
+  .ad-file-info-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ad-file-info-label { font-size: 9px; font-weight: 600; color: #9aafc4; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+
+  .ad-actions {
+    display: flex; gap: 10px; justify-content: center;
+    margin-bottom: 22px;
+  }
+
+  .ad-btn-main {
+    background: linear-gradient(135deg, #0f6fba, #0a4f8a);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px 22px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.15s;
+    box-shadow: 0 4px 14px rgba(15,111,186,0.35);
+  }
+  .ad-btn-main:hover { background: linear-gradient(135deg, #1580d0, #0f6fba); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(15,111,186,0.4); }
+
+  .ad-btn-sec {
+    background: #f7f9fc;
+    border: 1.5px solid #dce5ef;
+    border-radius: 10px;
+    color: #5a6e85;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px 18px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 7px;
+    transition: all 0.15s;
+  }
+  .ad-btn-sec:hover { background: #eaf0f7; color: #1a2638; border-color: #0f6fba; }
+
+  .ad-footer {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 10.5px;
+    color: #9aafc4;
+    font-weight: 500;
+    border-top: 1px solid #f0f4f8;
+    padding-top: 14px;
+  }
+  .ad-footer-item { display: flex; align-items: center; gap: 5px; }
+  .ad-footer-dot { width: 5px; height: 5px; border-radius: 50%; background: #e03d3d; display: inline-block; }
+  .ad-footer-sep { color: #dce5ef; }
+
 </style>
 </head>
 <body>
@@ -872,6 +1047,50 @@
   </div>
 </div>
 
+<!-- ACCESS DENIED OVERLAY -->
+<div id="accessDeniedOverlay" style="display:none" onclick="closeAccessDenied(event)">
+  <div class="ad-panel">
+    <div class="ad-icon-wrap">
+      <div class="ad-icon-ring"></div>
+      <div class="ad-icon-ring ad-ring2"></div>
+      <div class="ad-icon-core">
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
+          <path d="M19 7C14 7 10 11 10 16v2H8a2 2 0 00-2 2v9a2 2 0 002 2h22a2 2 0 002-2v-9a2 2 0 00-2-2h-2v-2c0-5-4-9-9-9z" fill="none" stroke="white" stroke-width="2.2" stroke-linejoin="round"/>
+          <rect x="10" y="18" width="18" height="13" rx="2" fill="white" fill-opacity="0.18"/>
+          <circle cx="19" cy="25" r="2.5" fill="white" opacity="0.9"/>
+          <line x1="19" y1="27" x2="19" y2="29" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="ad-code">ERRO 403</div>
+    <h2 class="ad-title">Acesso Negado</h2>
+    <p class="ad-msg">Você não tem permissão para acessar este arquivo.<br>Solicite acesso ao responsável ou faça login com uma conta autorizada.</p>
+
+    <div class="ad-file-info" id="adFileInfo"></div>
+
+    <div class="ad-actions">
+      <button class="ad-btn-main" id="adRequestBtn">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 2a8 8 0 100 16A8 8 0 0010 2zm0 4v4m0 3v1" stroke="white" stroke-width="2.2" stroke-linecap="round"/></svg>
+        Solicitar Acesso
+      </button>
+      <button class="ad-btn-sec" onclick="closeAccessDenied()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M5 15L15 5M5 5l10 10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        Fechar
+      </button>
+    </div>
+
+    <div class="ad-footer">
+      <div class="ad-footer-item">
+        <span class="ad-footer-dot"></span>
+        <span id="adFileName">—</span>
+      </div>
+      <div class="ad-footer-sep">·</div>
+      <div class="ad-footer-item">Sistema MedDocs</div>
+    </div>
+  </div>
+</div>
+
 <!-- CONTEXT MENU -->
 <div class="context-menu" id="contextMenu" style="display:none"></div>
 
@@ -908,38 +1127,38 @@
 const MEUS_LINKS = [
 
   // ── PLANILHAS ──────────────────────────────────────────────────────────
-  { nome: 'Controle Financeiro 2025',  pasta: 'Planilhas',      url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
-  { nome: 'Relatório de Vendas',       pasta: 'Planilhas',      url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
-  { nome: 'Inventário de Estoque',     pasta: 'Planilhas',      url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
+  { nome: 'Controle Financeiro 2025',  pasta: '',      url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
+  { nome: 'Relatório de Vendas',       pasta: '',      url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
+  { nome: 'Inventário de Estoque',     pasta: '',      url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
 
   // ── DOCUMENTOS ────────────────────────────────────────────────────────
-  { nome: 'Proposta Comercial',        pasta: 'Documentos',     url: 'https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit?usp=sharing' },
-  { nome: 'Ata de Reunião',            pasta: 'Documentos',     url: 'https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit?usp=sharing' },
-  { nome: 'Contrato de Serviço',       pasta: 'Documentos',     url: 'https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit?usp=sharing' },
+  { nome: 'Proposta Comercial',        pasta: '',     url: 'https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit?usp=sharing' },
+  { nome: 'Ata de Reunião',            pasta: '',     url: 'https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit?usp=sharing' },
+  { nome: 'Contrato de Serviço',       pasta: '',     url: 'https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit?usp=sharing' },
 
   // ── APRESENTAÇÕES ─────────────────────────────────────────────────────
-  { nome: 'Pitch para Investidores',   pasta: 'Apresentações',  url: 'https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vkc/edit?usp=sharing' },
-  { nome: 'Treinamento de Equipe',     pasta: 'Apresentações',  url: 'https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vkc/edit?usp=sharing' },
-  { nome: 'Produto Q1 2025',           pasta: 'Apresentações',  url: 'https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vkc/edit?usp=sharing' },
+  { nome: 'Pitch para Investidores',   pasta: '',  url: 'https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vkc/edit?usp=sharing' },
+  { nome: 'Treinamento de Equipe',     pasta: '',  url: 'https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vkc/edit?usp=sharing' },
+  { nome: 'Produto Q1 2025',           pasta: '',  url: 'https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vkc/edit?usp=sharing' },
 
   // ── FORMULÁRIOS ───────────────────────────────────────────────────────
-  { nome: 'Pesquisa de Satisfação',    pasta: 'Formulários',    url: 'https://docs.google.com/forms/d/1FAIpQLSe8AxCwvSYoAnGOQNgIKNY7n-LcJm7JmHR7Hn8vH/viewform?usp=sharing' },
-  { nome: 'Cadastro de Clientes',      pasta: 'Formulários',    url: 'https://docs.google.com/forms/d/1FAIpQLSe8AxCwvSYoAnGOQNgIKNY7n-LcJm7JmHR7Hn8vH/viewform?usp=sharing' },
+  { nome: 'Pesquisa de Satisfação',    pasta: '',    url: 'https://docs.google.com/forms/d/1FAIpQLSe8AxCwvSYoAnGOQNgIKNY7n-LcJm7JmHR7Hn8vH/viewform?usp=sharing' },
+  { nome: 'Cadastro de Clientes',      pasta: '',    url: 'https://docs.google.com/forms/d/1FAIpQLSe8AxCwvSYoAnGOQNgIKNY7n-LcJm7JmHR7Hn8vH/viewform?usp=sharing' },
 
   // ── PDF / OUTROS ──────────────────────────────────────────────────────
-  { nome: 'Manual do Usuário.pdf',     pasta: 'Arquivos PDF',   url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/view?usp=sharing' },
-  { nome: 'Relatório Anual 2024.pdf',  pasta: 'Arquivos PDF',   url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/view?usp=sharing' },
+  { nome: 'Manual do Usuário.pdf',     pasta: '',   url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/view?usp=sharing' },
+  { nome: 'Relatório Anual 2024.pdf',  pasta: '',   url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/view?usp=sharing' },
 
   // ── NA RAIZ (sem pasta) ───────────────────────────────────────────────
   { nome: 'Dashboard Geral',           pasta: '',               url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
 
   // ── AUTOCAD / DWG ─────────────────────────────────────────────────────────
-  { nome: 'Planta Baixa Térreo.dwg',  pasta: 'Projetos AutoCAD', url: 'https://drive.google.com/file/d/1WInZTEN-8FmnUydrtBqVJBlHXMNVBoX6/view?usp=drive_link' },
-  { nome: 'Fachada Principal.dwg',    pasta: 'Projetos AutoCAD', url: 'https://drive.google.com/file/d/1WInZTEN-8FmnUydrtBqVJBlHXMNVBoX6/view?usp=drive_link' },
+  { nome: 'Planta Baixa Térreo.dwg',  pasta: '', url: 'https://drive.google.com/file/d/1WInZTEN-8FmnUydrtBqVJBlHXMNVBoX6/view?usp=drive_link' },
+  { nome: 'Fachada Principal.dwg',    pasta: '', url: 'https://drive.google.com/file/d/1WInZTEN-8FmnUydrtBqVJBlHXMNVBoX6/view?usp=drive_link' },
 
   // ── ADICIONE NOVOS LINKS ABAIXO ↓ ─────────────────────────────────────
-  // { nome: 'Meu Arquivo',            pasta: 'Minha Pasta',    url: 'https://docs.google.com/...' },
-  // { nome: 'Planta.dwg',             pasta: 'AutoCAD',        url: 'https://drive.google.com/file/d/...' },
+  // { nome: 'Meu Arquivo',            pasta: '',    url: 'https://docs.google.com/...' },
+  // { nome: 'Planta.dwg',             pasta: '',        url: 'https://drive.google.com/file/d/...' },
 
 ];
 
@@ -1362,12 +1581,119 @@ function handleDblClick(name) {
   if (item.type === 'folder') {
     navigateTo([...currentPath, name]);
   } else if (item.url) {
-    window.open(item.url, '_blank');
-    toast(`Abrindo "${name}" no Google Drive...`, 'success');
+    openDriveFile(item);
   } else {
     toast(`Abrindo "${name}"...`, 'info');
   }
 }
+
+// ==================== DRIVE FILE OPENER + ACCESS GUARD ====================
+let _adCurrentItem = null;
+
+function openDriveFile(item) {
+  _adCurrentItem = item;
+  toast(`Abrindo "${item.name}"...`, 'info');
+
+  // Open in popup so we can monitor it
+  const popup = window.open(
+    item.url,
+    'drivePopup',
+    'width=1100,height=750,noopener=0'
+  );
+
+  if (!popup || popup.closed) {
+    // Popup was blocked — fallback: show access denied hint
+    showAccessDenied(item);
+    return;
+  }
+
+  // Detect redirect to Google Login via cross-origin polling:
+  // - If popup goes to accounts.google.com it becomes cross-origin → throws
+  // - But Drive files are ALSO cross-origin → also throw
+  // Strategy: after ~1 s, if popup CLOSED on its own (some browsers auto-close
+  // login redirects) OR main window regains focus immediately, flag access denied.
+  let resolved = false;
+  let focusTimer = null;
+
+  const onFocus = () => {
+    // Main window got focus back very quickly (< 3 s) — likely a login bounce
+    if (!resolved) {
+      clearTimeout(focusTimer);
+      resolved = true;
+      window.removeEventListener('focus', onFocus);
+      // Give browser 600ms to decide then check if popup closed or is on login
+      setTimeout(() => checkPopupStatus(popup, item), 600);
+    }
+  };
+
+  // Only attach the focus listener after a brief delay so the initial
+  // focus-loss to the popup itself doesn't trigger it
+  setTimeout(() => {
+    window.addEventListener('focus', onFocus);
+  }, 800);
+
+  // Fallback cleanup after 8 s regardless
+  setTimeout(() => {
+    if (!resolved) {
+      resolved = true;
+      window.removeEventListener('focus', onFocus);
+    }
+  }, 8000);
+}
+
+function checkPopupStatus(popup, item) {
+  try {
+    // If we can read location, popup is same-origin (rare for Google)
+    const loc = popup.location.href;
+    // If it contains accounts.google.com we know it's login
+    if (loc.includes('accounts.google') || loc.includes('ServiceLogin') || loc === 'about:blank') {
+      popup.close();
+      showAccessDenied(item);
+    }
+  } catch(e) {
+    // Cross-origin — check if popup closed itself (login sometimes auto-closes)
+    if (popup.closed) {
+      showAccessDenied(item);
+    }
+    // else: popup is still open on a cross-origin page = Drive loading normally
+  }
+}
+
+function showAccessDenied(item) {
+  _adCurrentItem = item;
+  const overlay = document.getElementById('accessDeniedOverlay');
+
+  // Populate file info
+  document.getElementById('adFileName').textContent = item.name;
+  const infoEl = document.getElementById('adFileInfo');
+  const driveType = getDriveType(item.url, item.ext, item.name);
+  infoEl.innerHTML = `
+    <div class="ad-file-info-icon">${getIcon(item, 22)}</div>
+    <div>
+      <div class="ad-file-info-label">Arquivo bloqueado</div>
+      <div class="ad-file-info-name">${item.name}</div>
+    </div>
+  `;
+
+  // Request Access button → opens Google "request access" flow
+  document.getElementById('adRequestBtn').onclick = () => {
+    const reqUrl = item.url.replace('/edit', '/view').replace('/view', '/view') + '&authuser=0';
+    window.open(reqUrl, '_blank');
+  };
+
+  overlay.style.display = 'flex';
+}
+
+function closeAccessDenied(e) {
+  if (e && e.target !== document.getElementById('accessDeniedOverlay')) return;
+  document.getElementById('accessDeniedOverlay').style.display = 'none';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    document.getElementById('accessDeniedOverlay').style.display = 'none';
+  }
+});
 
 // Click outside to deselect
 document.getElementById('fileArea').addEventListener('click', (e) => {
@@ -1397,7 +1723,7 @@ function showCtxMenu(e, name) {
   const menu = document.getElementById('contextMenu');
   menu.innerHTML = `
     ${isFolder ? `<div class="ctx-item" onclick="handleDblClick('${name}'); closeCtxMenu()"><span class="ctx-icon">📂</span> Abrir</div>` : ''}
-    ${!isFolder && item?.url ? `<div class="ctx-item" onclick="window.open('${item.url}','_blank'); closeCtxMenu()"><span class="ctx-icon">🔗</span> Abrir no Google Drive</div>` : ''}
+    ${!isFolder && item?.url ? `<div class="ctx-item" onclick="openDriveFile(${JSON.stringify(item)}); closeCtxMenu()"><span class="ctx-icon">🔗</span> Abrir no Google Drive</div>` : ''}
     ${!isFolder && !item?.url ? `<div class="ctx-item" onclick="toast('Abrindo arquivo...','info'); closeCtxMenu()"><span class="ctx-icon">▶</span> Abrir</div>` : ''}
     <div class="ctx-sep"></div>
     <div class="ctx-item" onclick="cutSelected(); closeCtxMenu()"><span class="ctx-icon">✂️</span> Recortar</div>
