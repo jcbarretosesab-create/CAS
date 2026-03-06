@@ -1545,39 +1545,12 @@ function togglePw() {
 
 const MEUS_LINKS = [
 
-  // ── PLANILHAS ──────────────────────────────────────────────────────────
-  { nome: 'Controle Financeiro 2025',  pasta: '',      url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
-  { nome: 'Relatório de Vendas',       pasta: '',      url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
-  { nome: 'Inventário de Estoque',     pasta: '',      url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
-
-  // ── DOCUMENTOS ────────────────────────────────────────────────────────
-  { nome: 'Proposta Comercial',        pasta: '',     url: 'https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit?usp=sharing' },
-  { nome: 'Ata de Reunião',            pasta: '',     url: 'https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit?usp=sharing' },
-  { nome: 'Contrato de Serviço',       pasta: '',     url: 'https://docs.google.com/document/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/edit?usp=sharing' },
-
-  // ── APRESENTAÇÕES ─────────────────────────────────────────────────────
-  { nome: 'Pitch para Investidores',   pasta: '',  url: 'https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vkc/edit?usp=sharing' },
-  { nome: 'Treinamento de Equipe',     pasta: '',  url: 'https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vkc/edit?usp=sharing' },
-  { nome: 'Produto Q1 2025',           pasta: '',  url: 'https://docs.google.com/presentation/d/1EAYk18WDjIG-zp_0vLm3CsfQh_i8eXc67Jo2O9C6Vkc/edit?usp=sharing' },
-
-  // ── FORMULÁRIOS ───────────────────────────────────────────────────────
-  { nome: 'Pesquisa de Satisfação',    pasta: '',    url: 'https://docs.google.com/forms/d/1FAIpQLSe8AxCwvSYoAnGOQNgIKNY7n-LcJm7JmHR7Hn8vH/viewform?usp=sharing' },
-  { nome: 'Cadastro de Clientes',      pasta: '',    url: 'https://docs.google.com/forms/d/1FAIpQLSe8AxCwvSYoAnGOQNgIKNY7n-LcJm7JmHR7Hn8vH/viewform?usp=sharing' },
-
-  // ── PDF / OUTROS ──────────────────────────────────────────────────────
-  { nome: 'Manual do Usuário.pdf',     pasta: '',   url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/view?usp=sharing' },
-  { nome: 'Relatório Anual 2024.pdf',  pasta: '',   url: 'https://drive.google.com/file/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms/view?usp=sharing' },
-
-  // ── NA RAIZ (sem pasta) ───────────────────────────────────────────────
-  { nome: 'Dashboard Geral',           pasta: '',               url: 'https://docs.google.com/spreadsheets/d/10kEfDeVO4PxSTOtvDBReYDSK4Nnj7tFN93-I0cLl3IA/edit?usp=sharing' },
-
-  // ── AUTOCAD / DWG ─────────────────────────────────────────────────────────
-  { nome: 'Planta Baixa Térreo.dwg',  pasta: '', url: 'https://drive.google.com/file/d/1WInZTEN-8FmnUydrtBqVJBlHXMNVBoX6/view?usp=drive_link' },
-  { nome: 'Fachada Principal.dwg',    pasta: '', url: 'https://drive.google.com/file/d/1WInZTEN-8FmnUydrtBqVJBlHXMNVBoX6/view?usp=drive_link' },
+  // ── PASTAS DO GOOGLE DRIVE ────────────────────────────────────────────
+  { nome: 'Hospital Geral de Itaparica — Etapa 2', pasta: '', url: 'https://drive.google.com/drive/folders/1oYSoqpaO76YvNuJDJig0pUMLK2ebT7UL?usp=sharing' },
 
   // ── ADICIONE NOVOS LINKS ABAIXO ↓ ─────────────────────────────────────
-  // { nome: 'Meu Arquivo',            pasta: '',    url: 'https://docs.google.com/...' },
-  // { nome: 'Planta.dwg',             pasta: '',        url: 'https://drive.google.com/file/d/...' },
+  // { nome: 'Meu Arquivo',  pasta: '',  url: 'https://docs.google.com/...' },
+  // { nome: 'Minha Pasta Drive', pasta: '', url: 'https://drive.google.com/drive/folders/...' },
 
 ];
 
@@ -1590,7 +1563,9 @@ function buildFsFromLinks(links) {
   links.forEach(({ nome, pasta, url }) => {
     const type = getDriveTypeEarly(url, nome);
     const ext  = url.includes('.pdf') ? 'pdf' : (extMap[type] || 'gdrive');
-    const item = { name: nome, type: 'file', ext, size: 0, modified: new Date(), url };
+    // Drive folders get a special type so they show folder icon + open URL on dblclick
+    const itemType = type === 'drive-folder' ? 'drive-folder' : 'file';
+    const item = { name: nome, type: itemType, ext, size: 0, modified: new Date(), url };
 
     if (!pasta) {
       root.children.push(item);
@@ -1609,6 +1584,7 @@ function getDriveTypeEarly(url, nome) {
   if (!url) return 'link';
   const n = (nome || '').toLowerCase();
   if (n.endsWith('.dwg') || n.endsWith('.dxf') || n.endsWith('.dwf') || n.endsWith('.dwt')) return 'autocad';
+  if (url.includes('/drive/folders/')) return 'drive-folder';
   if (url.includes('spreadsheets'))  return 'sheets';
   if (url.includes('/document'))     return 'docs';
   if (url.includes('/presentation')) return 'slides';
@@ -1689,6 +1665,7 @@ function getDriveType(url, ext, nome) {
   if (['dwg','dxf','dwf','dwt','dws'].includes(extStr) ||
       nameStr.endsWith('.dwg') || nameStr.endsWith('.dxf') ||
       nameStr.endsWith('.dwf') || nameStr.endsWith('.dwt')) return 'autocad';
+  if (url.includes('/drive/folders/')) return 'drive-folder';
   if (url.includes('spreadsheets')) return 'sheets';
   if (url.includes('/document')) return 'docs';
   if (url.includes('/presentation')) return 'slides';
@@ -1702,7 +1679,7 @@ function getDriveLabel(type) {
   const labels = {
     sheets: 'Sheets', docs: 'Docs', slides: 'Slides',
     forms: 'Forms', drawings: 'Draw', 'drive-file': 'Drive', link: 'Link',
-    autocad: 'AutoCAD'
+    autocad: 'AutoCAD', 'drive-folder': 'Pasta'
   };
   return labels[type] || 'Drive';
 }
@@ -1769,6 +1746,13 @@ function getDriveIconSVG(type, size = 32) {
       <path d="M17 6 L17 12 L23 12" fill="none" stroke="white" stroke-width="1.5" stroke-opacity="0.7"/>
       <text x="16" y="22" text-anchor="middle" font-family="Arial" font-weight="900" font-size="8" fill="white" opacity="0.95">PDF</text>
     </svg>`,
+    'drive-folder': `<svg width="${s}" height="${s}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3 10 Q3 8 5 8 L13 8 L15 6 L27 6 Q29 6 29 8 L29 26 Q29 28 27 28 L5 28 Q3 28 3 26 Z" fill="#FBBC04"/>
+      <path d="M3 12 L29 12 L29 26 Q29 28 27 28 L5 28 Q3 28 3 26 Z" fill="#F9AB00"/>
+      <!-- Drive triangle inside -->
+      <polygon points="16,15 22,24 10,24" fill="white" opacity="0.9" stroke="none"/>
+      <line x1="10" y1="22" x2="22" y2="22" stroke="white" stroke-width="1.2" opacity="0.6"/>
+    </svg>`,
     autocad: `<svg width="${s}" height="${s}" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
       <rect width="32" height="32" rx="7" fill="#CC2222"/>
       <!-- AutoCAD red background with A logo shape -->
@@ -1784,6 +1768,9 @@ function getDriveIconSVG(type, size = 32) {
 
 // ==================== RENDER ====================
 function getIcon(item, size = 32) {
+  if (item.type === 'drive-folder' || (item.url && item.url.includes('/drive/folders/'))) {
+    return getDriveIconSVG('drive-folder', size);
+  }
   if (item.url) {
     const type = getDriveType(item.url, item.ext, item.name);
     if (item.ext === 'pdf') return getDriveIconSVG('pdf', size);
@@ -1999,6 +1986,8 @@ function handleDblClick(name) {
   if (!item) return;
   if (item.type === 'folder') {
     navigateTo([...currentPath, name]);
+  } else if (item.type === 'drive-folder' && item.url) {
+    openDriveFile(item);
   } else if (item.url) {
     openDriveFile(item);
   } else {
