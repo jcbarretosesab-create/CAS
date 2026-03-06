@@ -1,4 +1,4 @@
-aa<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -930,15 +930,347 @@ aa<!DOCTYPE html>
   .ad-footer-dot { width: 5px; height: 5px; border-radius: 50%; background: #e03d3d; display: inline-block; }
   .ad-footer-sep { color: #dce5ef; }
 
+
+  /* =========================================
+     LOGIN SCREEN
+     ========================================= */
+  #loginScreen {
+    position: fixed; inset: 0;
+    background: linear-gradient(145deg, #e8f1f9 0%, #f0f4f8 40%, #ddeeff 100%);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* animated background circles */
+  #loginScreen::before, #loginScreen::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  #loginScreen::before {
+    width: 600px; height: 600px;
+    top: -180px; left: -180px;
+    background: radial-gradient(circle, rgba(15,111,186,0.10) 0%, transparent 70%);
+    animation: lsBobble 7s ease-in-out infinite;
+  }
+  #loginScreen::after {
+    width: 480px; height: 480px;
+    bottom: -140px; right: -120px;
+    background: radial-gradient(circle, rgba(23,160,90,0.08) 0%, transparent 70%);
+    animation: lsBobble 9s ease-in-out infinite reverse;
+  }
+  @keyframes lsBobble {
+    0%,100% { transform: scale(1) translate(0,0); }
+    50%      { transform: scale(1.08) translate(20px, -20px); }
+  }
+
+  .ls-card {
+    background: #fff;
+    border-radius: 22px;
+    padding: 44px 40px 36px;
+    width: 400px;
+    max-width: 92vw;
+    box-shadow: 0 24px 64px rgba(15,50,100,0.16), 0 0 0 1px rgba(15,111,186,0.07);
+    position: relative;
+    z-index: 1;
+    animation: lsCardIn 0.5s cubic-bezier(0.22,1,0.36,1);
+  }
+  @keyframes lsCardIn {
+    from { opacity:0; transform: translateY(30px) scale(0.96); }
+    to   { opacity:1; transform: translateY(0)    scale(1); }
+  }
+
+  /* top accent bar */
+  .ls-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0f6fba, #17a05a);
+    border-radius: 22px 22px 0 0;
+  }
+
+  .ls-logo-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .ls-logo-img {
+    height: 70px; width: auto;
+    max-width: 240px;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+  .ls-logo-fallback {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, #0f6fba, #0a4f8a);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    box-shadow: 0 4px 16px rgba(15,111,186,0.3);
+  }
+
+  .ls-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: #1a2638;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .ls-sub {
+    font-size: 12px;
+    color: #9aafc4;
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  .ls-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #dce5ef, transparent);
+    margin: 0 -8px 24px;
+  }
+
+  .ls-field {
+    margin-bottom: 16px;
+  }
+
+  .ls-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #5a6e85;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    font-size: 10px;
+  }
+
+  .ls-input-wrap {
+    position: relative;
+  }
+
+  .ls-input-icon {
+    position: absolute;
+    left: 13px; top: 50%;
+    transform: translateY(-50%);
+    color: #9aafc4;
+    font-size: 15px;
+    pointer-events: none;
+    transition: color 0.2s;
+  }
+
+  .ls-input {
+    width: 100%;
+    background: #f7f9fc;
+    border: 1.5px solid #dce5ef;
+    border-radius: 10px;
+    padding: 11px 13px 11px 40px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #1a2638;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .ls-input:focus {
+    border-color: #0f6fba;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(15,111,186,0.10);
+  }
+  .ls-input:focus + .ls-input-icon-right { opacity: 1; }
+  .ls-input-wrap:focus-within .ls-input-icon { color: #0f6fba; }
+  .ls-input.error { border-color: #e03d3d; box-shadow: 0 0 0 3px rgba(224,61,61,0.10); }
+
+  .ls-pw-toggle {
+    position: absolute;
+    right: 12px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    cursor: pointer;
+    color: #9aafc4;
+    padding: 2px;
+    font-size: 15px;
+    transition: color 0.15s;
+  }
+  .ls-pw-toggle:hover { color: #0f6fba; }
+
+  .ls-error {
+    display: none;
+    background: rgba(224,61,61,0.07);
+    border: 1px solid rgba(224,61,61,0.25);
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #c8152b;
+    margin-bottom: 16px;
+    align-items: center;
+    gap: 8px;
+  }
+  .ls-error.visible { display: flex; }
+
+  .ls-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #0f6fba, #0a4f8a);
+    border: none;
+    border-radius: 11px;
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 13px;
+    cursor: pointer;
+    transition: all 0.18s;
+    box-shadow: 0 4px 16px rgba(15,111,186,0.32);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    letter-spacing: 0.2px;
+    margin-top: 6px;
+  }
+  .ls-btn:hover { background: linear-gradient(135deg, #1580d0, #0f6fba); transform: translateY(-1px); box-shadow: 0 7px 22px rgba(15,111,186,0.38); }
+  .ls-btn:active { transform: translateY(0); }
+  .ls-btn.loading { opacity: 0.75; pointer-events: none; }
+
+  .ls-spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: lsSpin 0.7s linear infinite;
+    display: none;
+  }
+  .ls-btn.loading .ls-spinner { display: block; }
+  .ls-btn.loading .ls-btn-text { display: none; }
+
+  @keyframes lsSpin { to { transform: rotate(360deg); } }
+
+  .ls-footer {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f4f8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10.5px;
+    color: #9aafc4;
+    font-weight: 500;
+  }
+  .ls-footer-badge {
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(23,160,90,0.08);
+    border: 1px solid rgba(23,160,90,0.2);
+    border-radius: 20px;
+    padding: 3px 10px;
+    color: #17a05a;
+    font-weight: 600;
+    font-size: 10px;
+  }
+  .ls-footer-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: #17a05a;
+    animation: lsPulse 2s infinite;
+  }
+  @keyframes lsPulse {
+    0%,100% { opacity:1; } 50% { opacity:0.3; }
+  }
+
+  /* shake animation on wrong password */
+  @keyframes lsShake {
+    0%,100% { transform: translateX(0); }
+    20%      { transform: translateX(-8px); }
+    40%      { transform: translateX(8px); }
+    60%      { transform: translateX(-5px); }
+    80%      { transform: translateX(5px); }
+  }
+  .ls-card.shake { animation: lsShake 0.45s ease; }
+
+  /* hide app while login is showing */
+  .app-hidden { visibility: hidden; pointer-events: none; }
+
 </style>
 </head>
-<body>
+
+<!-- ═══════════════════════════════════════════
+     LOGIN SCREEN
+═══════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="ls-card" id="lsCard">
+
+    <div class="ls-logo-wrap">
+      <img class="ls-logo-img"
+           src="https://www.saude.ba.gov.br/wp-content/uploads/2022/06/LOGO-ESTADO-B.png"
+           alt="SESAB"
+           onerror="this.style.display='none'; document.getElementById('lsLogoFallback').style.display='flex'">
+      <div class="ls-logo-fallback" id="lsLogoFallback" style="display:none">✚</div>
+      <div>
+        <div class="ls-title">MedDocs</div>
+        <div class="ls-sub">Sistema de Gestão de Arquivos</div>
+      </div>
+    </div>
+
+    <div class="ls-divider"></div>
+
+    <div class="ls-error" id="lsError">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+        <circle cx="10" cy="10" r="9" stroke="#c8152b" stroke-width="2"/>
+        <path d="M10 6v4m0 3v1" stroke="#c8152b" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span id="lsErrorMsg">Usuário ou senha incorretos.</span>
+    </div>
+
+    <div class="ls-field">
+      <label class="ls-label" for="lsUser">Usuário</label>
+      <div class="ls-input-wrap">
+        <span class="ls-input-icon">👤</span>
+        <input class="ls-input" id="lsUser" type="text"
+               placeholder="Digite seu usuário"
+               autocomplete="username"
+               onkeydown="if(event.key==='Enter') document.getElementById('lsPass').focus()">
+      </div>
+    </div>
+
+    <div class="ls-field">
+      <label class="ls-label" for="lsPass">Senha</label>
+      <div class="ls-input-wrap">
+        <span class="ls-input-icon">🔒</span>
+        <input class="ls-input" id="lsPass" type="password"
+               placeholder="Digite sua senha"
+               autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') doLogin()">
+        <button class="ls-pw-toggle" type="button" onclick="togglePw()" title="Mostrar/ocultar senha" id="lsPwBtn">👁</button>
+      </div>
+    </div>
+
+    <button class="ls-btn" id="lsBtn" onclick="doLogin()">
+      <div class="ls-spinner"></div>
+      <span class="ls-btn-text">Entrar no Sistema</span>
+    </button>
+
+    <div class="ls-footer">
+      <span>© MedDocs 2025</span>
+      <div class="ls-footer-badge">
+        <div class="ls-footer-dot"></div>
+        Sistema Online
+      </div>
+    </div>
+
+  </div>
+</div>
+
 
 <div class="app">
   <!-- TITLEBAR -->
   <div class="titlebar">
     <div class="logo">
-      <img class="logo-img" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRu_LTvKToBD1CCX4vVeDN9A0OMk7tLr2pP3g&s" alt="Logo" onerror="this.style.display='none'">
+      <img class="logo-img" src="https://www.saude.ba.gov.br/wp-content/uploads/2022/06/LOGO-ESTADO-B.png" alt="Logo" onerror="this.style.display='none'">
       <div class="logo-text-block">
         <span class="logo-title">MedDocs</span>
         <span class="logo-sub">Gestão de Arquivos</span>
@@ -1108,6 +1440,93 @@ aa<!DOCTYPE html>
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
+
+// ==================== LOGIN ====================
+// ┌──────────────────────────────────────────────────────┐
+// │  ✏️  CREDENCIAIS DE ACESSO — altere aqui             │
+// │                                                      │
+// │  Você pode adicionar mais usuários à lista abaixo.   │
+// └──────────────────────────────────────────────────────┘
+const USUARIOS = [
+  { usuario: 'admin',    senha: 'meddocs2025' },
+  { usuario: 'sesab',    senha: 'sesab@2025'  },
+  // { usuario: 'novo',  senha: 'senha123'    },
+];
+
+(function initLogin() {
+  // Hide app until logged in
+  document.querySelector('.app').classList.add('app-hidden');
+  // Focus user field
+  setTimeout(() => document.getElementById('lsUser')?.focus(), 300);
+})();
+
+function doLogin() {
+  const user = document.getElementById('lsUser').value.trim();
+  const pass = document.getElementById('lsPass').value;
+  const btn  = document.getElementById('lsBtn');
+  const err  = document.getElementById('lsError');
+  const card = document.getElementById('lsCard');
+
+  // Clear previous errors
+  err.classList.remove('visible');
+  document.getElementById('lsUser').classList.remove('error');
+  document.getElementById('lsPass').classList.remove('error');
+
+  if (!user || !pass) {
+    document.getElementById('lsErrorMsg').textContent = 'Preencha usuário e senha.';
+    err.classList.add('visible');
+    if (!user) document.getElementById('lsUser').classList.add('error');
+    if (!pass) document.getElementById('lsPass').classList.add('error');
+    card.classList.remove('shake');
+    void card.offsetWidth; // reflow to re-trigger animation
+    card.classList.add('shake');
+    return;
+  }
+
+  // Loading state
+  btn.classList.add('loading');
+
+  setTimeout(() => {
+    const match = USUARIOS.find(u =>
+      u.usuario.toLowerCase() === user.toLowerCase() && u.senha === pass
+    );
+
+    if (match) {
+      // Success — fade out login screen
+      document.getElementById('loginScreen').style.transition = 'opacity 0.45s ease';
+      document.getElementById('loginScreen').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.querySelector('.app').classList.remove('app-hidden');
+        toast(`Bem-vindo, ${match.usuario}! 👋`, 'success');
+      }, 450);
+    } else {
+      btn.classList.remove('loading');
+      document.getElementById('lsErrorMsg').textContent = 'Usuário ou senha incorretos.';
+      err.classList.add('visible');
+      document.getElementById('lsUser').classList.add('error');
+      document.getElementById('lsPass').classList.add('error');
+      document.getElementById('lsPass').value = '';
+      card.classList.remove('shake');
+      void card.offsetWidth;
+      card.classList.add('shake');
+      setTimeout(() => document.getElementById('lsPass').focus(), 100);
+    }
+  }, 700); // simula verificação
+}
+
+function togglePw() {
+  const inp = document.getElementById('lsPass');
+  const btn = document.getElementById('lsPwBtn');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    inp.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
 // ┌─────────────────────────────────────────────────────────────────────────┐
 // │                  ✏️  ADICIONE SEUS LINKS AQUI                           │
 // │                                                                         │
