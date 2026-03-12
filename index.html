@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MedDocs — Gestão de Arquivos</title>
+<title>SusDocs — Gestão de Arquivos</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   :root {
     --bg:      #f0f4f8;
@@ -49,12 +50,15 @@
   /* === LAYOUT === */
   .app {
     display: grid;
+    grid-template-columns: 220px 1fr;
     grid-template-rows: 48px 1fr 28px;
     height: 100vh;
   }
 
   /* === TITLEBAR === */
   .titlebar {
+    grid-column: 2;
+    grid-row: 1;
     background: var(--bg2);
     border-bottom: 1px solid var(--border);
     display: flex;
@@ -174,13 +178,17 @@
 
   /* === MAIN AREA === */
   .main {
-    display: grid;
-    grid-template-columns: 220px 1fr;
+    grid-column: 2;
+    grid-row: 2;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   /* === SIDEBAR === */
   .sidebar {
+    grid-column: 1;
+    grid-row: 1 / 4;
     background: var(--bg2);
     border-right: 1px solid var(--border);
     overflow-y: auto;
@@ -448,6 +456,8 @@
 
   /* === STATUSBAR === */
   .statusbar {
+    grid-column: 2;
+    grid-row: 3;
     background: var(--bg2);
     border-top: 1px solid var(--border);
     display: flex;
@@ -930,10 +940,390 @@
   .ad-footer-dot { width: 5px; height: 5px; border-radius: 50%; background: #e03d3d; display: inline-block; }
   .ad-footer-sep { color: #dce5ef; }
 
+  /* =========================================
+     PENDING APPROVAL OVERLAY
+     ========================================= */
+  #pendingOverlay {
+    position: fixed; inset: 0;
+    background: rgba(10, 25, 50, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    animation: adFadeIn 0.25s ease;
+  }
+  #pendingOverlay.visible { display: flex; }
+
+  .pending-panel {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 36px 32px;
+    width: 420px;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 32px 80px rgba(10,25,60,0.28), 0 0 0 1px rgba(15,111,186,0.08);
+    animation: adSlideIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .pending-panel::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #f4b400, #e8820c, #f4b400);
+  }
+  .pending-icon-wrap {
+    width: 80px; height: 80px;
+    margin: 0 auto 18px;
+    background: linear-gradient(135deg, #f4b400, #e8820c);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+    box-shadow: 0 8px 24px rgba(244,180,0,0.38);
+  }
+  .pending-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    color: #1a2638;
+    margin-bottom: 10px;
+  }
+  .pending-msg {
+    font-size: 13px;
+    color: #5a6e85;
+    line-height: 1.65;
+    margin-bottom: 20px;
+  }
+  .pending-folder-info {
+    background: #f7f9fc;
+    border: 1px solid #dce5ef;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 22px;
+    font-size: 12px;
+    color: #1a2638;
+    font-weight: 600;
+    display: flex; align-items: center; gap: 10px;
+    text-align: left;
+  }
+  .pending-folder-icon { font-size: 20px; flex-shrink: 0; }
+  .pending-close-btn {
+    background: linear-gradient(135deg, #0f6fba, #0a4f8a);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 11px 28px;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 14px rgba(15,111,186,0.35);
+  }
+  .pending-close-btn:hover { background: linear-gradient(135deg, #1580d0, #0f6fba); transform: translateY(-1px); }
+
+  /* Folder lock badge */
+  .folder-locked-badge {
+    position: absolute;
+    top: 5px; right: 5px;
+    background: rgba(244,180,0,0.9);
+    border-radius: 4px;
+    font-size: 10px;
+    padding: 2px 5px;
+    color: #1a2638;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+
+  /* User Manager permission tab */
+  .um-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .um-tab {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    color: var(--text2);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 7px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .um-tab:first-child { border-radius: 6px 0 0 0; }
+  .um-tab:last-child { border-radius: 0 6px 0 0; }
+  .um-tab.active { background: var(--bg2); color: var(--accent); border-top: 2px solid var(--accent); }
+  .um-tab-panel { display: none; }
+  .um-tab-panel.active { display: block; }
+
+  /* Pending users badge in user list */
+  .um-pending-badge {
+    background: #f4b400;
+    color: #1a2638;
+    border-radius: 10px;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 6px;
+    margin-left: 4px;
+  }
+
+  .um-approve-btn {
+    background: rgba(23,160,90,0.12);
+    border: 1px solid rgba(23,160,90,0.4);
+    border-radius: 5px;
+    color: #17a05a;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .um-approve-btn:hover { background: rgba(23,160,90,0.22); }
+  .um-reject-btn {
+    background: rgba(224,61,61,0.08);
+    border: 1px solid rgba(224,61,61,0.3);
+    border-radius: 5px;
+    color: var(--warn);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .um-reject-btn:hover { background: rgba(224,61,61,0.16); }
+
+  /* Folder permission panel */
+  .fp-folder-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    margin-bottom: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .fp-folder-item:hover { border-color: var(--accent2); background: var(--bg4); }
+  .fp-folder-item.selected { border-color: var(--accent); background: var(--selected); color: var(--accent); }
+  .fp-user-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 8px;
+    border-radius: 5px;
+    font-size: 11px;
+    margin-bottom: 3px;
+  }
+  .fp-user-row:hover { background: var(--bg4); }
+  .fp-checkbox {
+    width: 15px; height: 15px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .fp-open-label { font-size: 10px; color: var(--text3); font-style: italic; }
 
   /* =========================================
-     LOGIN SCREEN
+     RESPONSIVO
      ========================================= */
+
+  /* ── Mobile (≤ 768px) ── */
+  @media (max-width: 768px) {
+    body { overflow: auto; }
+
+    .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: 52px 1fr auto;
+      height: 100dvh;
+      min-height: 100dvh;
+    }
+
+    /* ── Titlebar mobile ── */
+    .titlebar {
+      grid-column: 1;
+      grid-row: 1;
+      padding: 0 10px;
+      gap: 8px;
+      flex-wrap: nowrap;
+      overflow: hidden;
+    }
+
+    .main {
+      grid-column: 1;
+      grid-row: 2;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .statusbar {
+      grid-column: 1;
+      grid-row: 3;
+    }
+
+    .logo-sub { display: none; }
+    .logo-img  { height: 30px; }
+
+    /* breadcrumb shrinks */
+    .breadcrumb { min-width: 0; font-size: 11px; padding: 4px 8px; }
+
+    /* hide desktop toolbar buttons from titlebar */
+    .titlebar > .toolbar-btn { display: none; }
+
+    /* hide nav buttons */
+    .nav-btns { display: none; }
+
+    /* search becomes icon-only until tapped */
+    .search { width: 32px; padding: 5px 8px 5px 28px; }
+    .search:focus { width: 160px; }
+
+    /* hamburger button */
+    .ham-btn {
+      display: flex !important;
+    }
+
+    /* ── Sidebar becomes a slide-in drawer ── */
+    .sidebar {
+      grid-column: unset;
+      grid-row: unset;
+      position: fixed;
+      top: 52px;
+      left: 0;
+      bottom: 0;
+      width: 260px;
+      z-index: 500;
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      box-shadow: none;
+      border-right: 1px solid var(--border);
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+      box-shadow: 8px 0 32px rgba(15,50,100,0.18);
+    }
+
+    /* dim overlay behind sidebar */
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,20,40,0.38);
+      z-index: 499;
+      backdrop-filter: blur(2px);
+    }
+    .sidebar-backdrop.visible { display: block; }
+
+    /* ── Content toolbar: show icons only, wrap ── */
+    .content-toolbar {
+      padding: 6px 10px;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-btn {
+      font-size: 14px;
+      padding: 5px 7px;
+    }
+
+    /* show only emoji in mobile toolbar btns */
+    .btn-label { display: none; }
+
+    /* selected info smaller */
+    .selected-info { font-size: 10px; margin-left: 4px; }
+
+    /* view toggle stays */
+    .view-toggle { margin-left: auto; }
+
+    /* file grid adapts */
+    .file-grid {
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 6px;
+    }
+
+    .file-area { padding: 10px; }
+
+    .file-item { padding: 10px 6px; gap: 6px; }
+    .file-item .file-icon { font-size: 26px; }
+    .file-item .file-name { font-size: 10px; }
+
+    /* list view: hide date & size columns */
+    .list-item {
+      grid-template-columns: 24px 1fr 70px;
+    }
+    .list-item .file-date,
+    .list-item .file-size,
+    .list-header .col-date,
+    .list-header .col-size { display: none; }
+
+    .list-header {
+      grid-template-columns: 24px 1fr 70px;
+    }
+
+    /* statusbar: compress */
+    .statusbar {
+      padding: 0 10px;
+      gap: 8px;
+      font-size: 10px;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+    }
+    .status-sep { display: none; }
+    #statusSelected,
+    #statusSize { display: none; }
+
+    /* modal full-width */
+    .modal {
+      width: calc(100vw - 24px);
+      max-width: 400px;
+      padding: 20px 16px;
+      margin: 0 12px;
+    }
+
+    /* toasts */
+    .toast-container { bottom: 32px; right: 10px; left: 10px; }
+    .toast { min-width: unset; width: 100%; }
+
+    /* context menu */
+    .context-menu { min-width: 160px; font-size: 13px; }
+
+    /* access denied panel */
+    .ad-panel { width: calc(100vw - 32px); max-width: 380px; padding: 28px 20px; }
+  }
+
+  /* ── Small mobile (≤ 400px) ── */
+  @media (max-width: 400px) {
+    .logo-title { font-size: 11px; }
+    .file-grid {
+      grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    }
+    .ls-card { padding: 32px 20px 28px; }
+  }
+
+  /* Hamburger button — hidden on desktop */
+  .ham-btn {
+    display: none;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    padding: 5px 8px;
+    cursor: pointer;
+    font-size: 18px;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  .ham-btn:hover { color: var(--accent); border-color: var(--accent2); }
+
   #loginScreen {
     position: fixed; inset: 0;
     background: linear-gradient(145deg, #e8f1f9 0%, #f0f4f8 40%, #ddeeff 100%);
@@ -1195,6 +1585,211 @@
   /* hide app while login is showing */
   .app-hidden { visibility: hidden; pointer-events: none; }
 
+  /* === GOOGLE LOGIN === */
+  .ls-or {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 16px;
+    font-size: 11px;
+    color: #9aafc4;
+    font-weight: 500;
+  }
+  .ls-or::before, .ls-or::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #dce5ef;
+  }
+
+  .ls-google-btn {
+    width: 100%;
+    background: #fff;
+    border: 1.5px solid #dce5ef;
+    border-radius: 11px;
+    color: #3c4043;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 11px 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.18s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    letter-spacing: 0.1px;
+  }
+  .ls-google-btn:hover {
+    background: #f7f9fc;
+    border-color: #4285F4;
+    box-shadow: 0 3px 12px rgba(66,133,244,0.18);
+    transform: translateY(-1px);
+  }
+  .ls-google-btn:active { transform: translateY(0); }
+  .ls-google-btn svg { flex-shrink: 0; }
+
+  .ls-google-info {
+    font-size: 10px;
+    color: #9aafc4;
+    text-align: center;
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  /* === USER MANAGER MODAL === */
+  #userManagerOverlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.72);
+    backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center;
+    z-index: 3000;
+    animation: fadeIn 0.15s ease;
+  }
+  #userManagerOverlay.open { display: flex; }
+  .um-modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    padding: 28px;
+    width: 460px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+    animation: modalIn 0.15s ease;
+  }
+  .um-header { display: flex; align-items: center; justify-content: space-between; }
+  .um-title { font-family: 'Plus Jakarta Sans',sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+  .um-close { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text3); padding: 2px 6px; border-radius: 4px; }
+  .um-close:hover { background: var(--bg4); color: var(--text); }
+  .um-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; max-height: 320px; }
+  .um-list::-webkit-scrollbar { width: 4px; }
+  .um-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .um-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px;
+  }
+  .um-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; flex-shrink: 0;
+  }
+  .um-info { flex: 1; }
+  .um-name { color: var(--text); font-weight: 500; }
+  .um-badge {
+    font-size: 9px; padding: 2px 6px; border-radius: 10px;
+    background: rgba(15,111,186,0.12); color: var(--accent);
+    font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .um-badge.user { background: var(--bg4); color: var(--text3); }
+  .um-actions { display: flex; gap: 6px; }
+  .um-btn {
+    background: none; border: 1px solid var(--border);
+    border-radius: 5px; cursor: pointer; padding: 4px 8px;
+    font-size: 12px; color: var(--text2); transition: all 0.15s;
+  }
+  .um-btn:hover { border-color: var(--accent2); color: var(--accent); }
+  .um-btn.danger:hover { border-color: var(--warn); color: var(--warn); }
+  .um-divider { height: 1px; background: var(--border); }
+  .um-form { display: flex; flex-direction: column; gap: 10px; }
+  .um-form-title { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .um-form-row { display: flex; gap: 8px; }
+  .um-input {
+    flex: 1; background: var(--bg3); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 8px 10px; color: var(--text);
+    font-family: inherit; font-size: 12px; outline: none;
+  }
+  .um-input:focus { border-color: var(--accent); }
+  .um-input::placeholder { color: var(--text3); }
+  .um-submit {
+    background: var(--accent); border: none; border-radius: 6px;
+    color: #fff; padding: 8px 16px; cursor: pointer;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    transition: background 0.15s; white-space: nowrap;
+  }
+  .um-submit:hover { background: var(--accent2); }
+  .um-submit:disabled { opacity: 0.5; cursor: default; }
+  .um-msg { font-size: 11px; min-height: 16px; }
+  .um-msg.ok  { color: var(--accent3); }
+  .um-msg.err { color: var(--warn); }
+
+
+  /* === REGISTER PANEL === */
+  .ls-panel {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .ls-panel.hidden {
+    display: none;
+  }
+  .ls-register-link {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--text3, #9aafc4);
+  }
+  .ls-register-link a {
+    color: var(--accent, #0f6fba);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .ls-register-link a:hover { text-decoration: underline; }
+  .ls-reg-success {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 0 8px;
+    text-align: center;
+  }
+  .ls-reg-success .reg-icon { font-size: 40px; }
+  .ls-reg-success .reg-title { font-size: 15px; font-weight: 700; color: #17a05a; }
+  .ls-reg-success .reg-sub { font-size: 12px; color: #9aafc4; line-height: 1.5; }
+  .ls-back-link {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--text3, #9aafc4);
+  }
+  .ls-back-link a {
+    color: var(--accent, #0f6fba);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .ls-back-link a:hover { text-decoration: underline; }
+  .ls-reg-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #17a05a, #128a4a);
+    border: none;
+    border-radius: 11px;
+    color: white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 13px;
+    cursor: pointer;
+    transition: all 0.18s;
+    box-shadow: 0 4px 16px rgba(23,160,90,0.28);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    margin-top: 6px;
+  }
+  .ls-reg-btn:hover { background: linear-gradient(135deg, #1db368, #17a05a); transform: translateY(-1px); }
+  .ls-reg-btn:disabled { opacity: 0.6; cursor: default; transform: none; }
+  .ls-reg-note {
+    font-size: 11px;
+    color: #9aafc4;
+    text-align: center;
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
 </style>
 </head>
 
@@ -1211,7 +1806,7 @@
            onerror="this.style.display='none'; document.getElementById('lsLogoFallback').style.display='flex'">
       <div class="ls-logo-fallback" id="lsLogoFallback" style="display:none">✚</div>
       <div>
-        <div class="ls-title">MedDocs</div>
+        <div class="ls-title">SusDocs</div>
         <div class="ls-sub">Sistema de Gestão de Arquivos</div>
       </div>
     </div>
@@ -1254,8 +1849,97 @@
       <span class="ls-btn-text">Entrar no Sistema</span>
     </button>
 
+    <div class="ls-register-link">
+      Não tem conta? <a onclick="showRegisterPanel()">Criar conta</a>
+    </div>
+
+    <!-- Google login oculto -->
+
     <div class="ls-footer">
-      <span>© MedDocs 2025</span>
+      <span>© SusDocs 2025</span>
+      <div class="ls-footer-badge">
+        <div class="ls-footer-dot"></div>
+        Sistema Online
+      </div>
+    </div>
+
+  </div>
+
+  <!-- REGISTER PANEL -->
+  <div class="ls-panel hidden" id="lsRegPanel">
+
+    <div class="ls-logo-wrap">
+      <img class="ls-logo-img" src="images.png" alt="SESAB" onerror="this.style.display='none'">
+      <div>
+        <div class="ls-title">Criar Conta</div>
+        <div class="ls-sub">Cadastro no SusDocs</div>
+      </div>
+    </div>
+
+    <div class="ls-divider"></div>
+
+    <div class="ls-error" id="lsRegError">
+      <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+        <circle cx="10" cy="10" r="9" stroke="#c8152b" stroke-width="2"/>
+        <path d="M10 6v4m0 3v1" stroke="#c8152b" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span id="lsRegErrorMsg"></span>
+    </div>
+
+    <div id="lsRegForm">
+      <div class="ls-field">
+        <label class="ls-label" for="lsRegUser">Usuário</label>
+        <div class="ls-input-wrap">
+          <span class="ls-input-icon">👤</span>
+          <input class="ls-input" id="lsRegUser" type="text"
+                 placeholder="Escolha um nome de usuário"
+                 autocomplete="off"
+                 onkeydown="if(event.key==='Enter') document.getElementById('lsRegPass').focus()">
+        </div>
+      </div>
+
+      <div class="ls-field">
+        <label class="ls-label" for="lsRegPass">Senha</label>
+        <div class="ls-input-wrap">
+          <span class="ls-input-icon">🔒</span>
+          <input class="ls-input" id="lsRegPass" type="password"
+                 placeholder="Crie uma senha"
+                 autocomplete="new-password"
+                 onkeydown="if(event.key==='Enter') document.getElementById('lsRegPass2').focus()">
+        </div>
+      </div>
+
+      <div class="ls-field">
+        <label class="ls-label" for="lsRegPass2">Confirmar Senha</label>
+        <div class="ls-input-wrap">
+          <span class="ls-input-icon">🔒</span>
+          <input class="ls-input" id="lsRegPass2" type="password"
+                 placeholder="Repita a senha"
+                 autocomplete="new-password"
+                 onkeydown="if(event.key==='Enter') doRegister()">
+        </div>
+      </div>
+
+      <button class="ls-reg-btn" id="lsRegBtn" onclick="doRegister()">
+        <span id="lsRegBtnText">Criar minha conta</span>
+      </button>
+
+      <p class="ls-reg-note">Sua conta será criada como <strong>Usuário padrão</strong>.<br>Solicite ao administrador para elevar suas permissões.</p>
+    </div>
+
+    <!-- Sucesso -->
+    <div class="ls-reg-success" id="lsRegSuccess">
+      <div class="reg-icon">⏳</div>
+      <div class="reg-title">Conta criada!</div>
+      <div class="reg-sub">Seu cadastro foi realizado.<br><strong>Aguarde aprovação do administrador</strong> para acessar as pastas.</div>
+    </div>
+
+    <div class="ls-back-link">
+      <a onclick="showLoginPanel()">← Voltar para o login</a>
+    </div>
+
+    <div class="ls-footer">
+      <span>© SusDocs 2025</span>
       <div class="ls-footer-badge">
         <div class="ls-footer-dot"></div>
         Sistema Online
@@ -1267,12 +1951,54 @@
 
 
 <div class="app">
-  <!-- TITLEBAR -->
+  <!-- SIDEBAR (col 1, full height) -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeSidebar()"></div>
+  <div class="sidebar">
+    <div class="health-banner">
+      <span class="health-cross">✚</span>
+      <span>Sistema de Saúde</span>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Favoritos</div>
+      <div class="tree-item selected" onclick="navigateTo(['Início'])">
+        <span class="icon">🏠</span>
+        <span class="name">Início</span>
+      </div>
+      <div class="tree-item" onclick="navigateTo(['Início', 'Planilhas'])">
+        <span class="icon">📗</span>
+        <span class="name">Planilhas</span>
+      </div>
+      <div class="tree-item" onclick="navigateTo(['Início', 'Documentos'])">
+        <span class="icon">📘</span>
+        <span class="name">Documentos</span>
+      </div>
+      <div class="tree-item" onclick="navigateTo(['Início', 'Apresentações'])">
+        <span class="icon">📊</span>
+        <span class="name">Apresentações</span>
+      </div>
+      <div class="tree-item" onclick="navigateTo(['Início', 'Formulários'])">
+        <span class="icon">📋</span>
+        <span class="name">Formulários</span>
+      </div>
+      <div class="tree-item" onclick="navigateTo(['Início', 'Projetos AutoCAD'])">
+        <span class="icon">📐</span>
+        <span class="name">Projetos AutoCAD</span>
+      </div>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Árvore</div>
+      <div id="sidebarTree"></div>
+    </div>
+  </div>
+
+  <!-- TITLEBAR (col 2, row 1) -->
   <div class="titlebar">
+    <button class="ham-btn" id="hamBtn" onclick="toggleSidebar()" title="Menu">☰</button>
     <div class="logo">
       <img class="logo-img" src="images.png" alt="Logo" onerror="this.style.display='none'">
       <div class="logo-text-block">
-        <span class="logo-title">MedDocs</span>
+        <span class="logo-title">SusDocs</span>
         <span class="logo-sub">Gestão de Arquivos</span>
       </div>
     </div>
@@ -1286,60 +2012,21 @@
       <span class="search-icon">⌕</span>
       <input class="search" type="text" placeholder="Buscar arquivos..." id="searchInput" oninput="handleSearch(this.value)">
     </div>
-    <button class="toolbar-btn" onclick="openModal('folder')">📁 Nova pasta</button>
-    <button class="toolbar-btn" onclick="openModal('file')">📄 Novo arquivo</button>
-    <button class="toolbar-btn drive-btn" onclick="openDriveLinkModal()">🔗 Link Drive</button>
+    <button class="toolbar-btn" onclick="openModal('folder')">📁 <span class="btn-label">Nova pasta</span></button>
+    <button class="toolbar-btn" onclick="openModal('file')">📄 <span class="btn-label">Novo arquivo</span></button>
+    <button class="toolbar-btn drive-btn" onclick="openDriveLinkModal()">🔗 <span class="btn-label">Link Drive</span></button>
+    <button class="toolbar-btn" id="btnUsuarios" onclick="openUserManager()" style="display:none" title="Gerenciar Usuários">👥 <span class="btn-label">Usuários</span></button>
   </div>
 
-  <!-- MAIN -->
+  <!-- MAIN (col 2, row 2) -->
   <div class="main">
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-      <div class="health-banner">
-        <span class="health-cross">✚</span>
-        <span>Sistema de Saúde</span>
-      </div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">Favoritos</div>
-        <div class="tree-item selected" onclick="navigateTo(['Início'])">
-          <span class="icon">🏠</span>
-          <span class="name">Início</span>
-        </div>
-        <div class="tree-item" onclick="navigateTo(['Início', 'Planilhas'])">
-          <span class="icon">📗</span>
-          <span class="name">Planilhas</span>
-        </div>
-        <div class="tree-item" onclick="navigateTo(['Início', 'Documentos'])">
-          <span class="icon">📘</span>
-          <span class="name">Documentos</span>
-        </div>
-        <div class="tree-item" onclick="navigateTo(['Início', 'Apresentações'])">
-          <span class="icon">📊</span>
-          <span class="name">Apresentações</span>
-        </div>
-        <div class="tree-item" onclick="navigateTo(['Início', 'Formulários'])">
-          <span class="icon">📋</span>
-          <span class="name">Formulários</span>
-        </div>
-        <div class="tree-item" onclick="navigateTo(['Início', 'Projetos AutoCAD'])">
-          <span class="icon">📐</span>
-          <span class="name">Projetos AutoCAD</span>
-        </div>
-      </div>
-      <div class="sidebar-divider"></div>
-      <div class="sidebar-section">
-        <div class="sidebar-label">Árvore</div>
-        <div id="sidebarTree"></div>
-      </div>
-    </div>
-
     <!-- CONTENT -->
     <div class="content">
       <div class="content-toolbar">
-        <button class="toolbar-btn" id="btnCut" onclick="cutSelected()">✂️ Recortar</button>
-        <button class="toolbar-btn" id="btnCopy" onclick="copySelected()">📋 Copiar</button>
-        <button class="toolbar-btn" id="btnPaste" onclick="pasteItems()" id="btnPaste">📌 Colar</button>
-        <button class="toolbar-btn danger" id="btnDelete" onclick="deleteSelected()" style="color:var(--warn)">🗑️ Excluir</button>
+        <button class="toolbar-btn" id="btnCut" onclick="cutSelected()">✂️ <span class="btn-label">Recortar</span></button>
+        <button class="toolbar-btn" id="btnCopy" onclick="copySelected()">📋 <span class="btn-label">Copiar</span></button>
+        <button class="toolbar-btn" id="btnPaste" onclick="pasteItems()">📌 <span class="btn-label">Colar</span></button>
+        <button class="toolbar-btn danger" id="btnDelete" onclick="deleteSelected()" style="color:var(--warn)">🗑️ <span class="btn-label">Excluir</span></button>
         <span class="selected-info" id="selectedInfo"></span>
         <div class="view-toggle">
           <button class="view-btn active" id="viewGrid" onclick="setView('grid')" title="Grid">⊞</button>
@@ -1362,11 +2049,11 @@
     </div>
   </div>
 
-  <!-- STATUSBAR -->
+  <!-- STATUSBAR (col 2, row 3) -->
   <div class="statusbar">
     <div class="status-item">
       <div class="status-dot"></div>
-      MedDocs v2.0
+      SusDocs v2.0
     </div>
     <span class="status-sep">|</span>
     <div class="status-item" id="statusPath">Início</div>
@@ -1376,6 +2063,65 @@
     <div class="status-item" id="statusSelected">Nenhum selecionado</div>
     <span class="status-sep">|</span>
     <div class="status-item" id="statusSize">0 KB usados</div>
+  </div>
+</div>
+
+<!-- USER MANAGER OVERLAY -->
+<div id="userManagerOverlay">
+  <div class="um-modal" style="max-width:580px;width:96vw">
+    <div class="um-header">
+      <span class="um-title">👥 Gerenciar Usuários</span>
+      <button class="um-close" onclick="closeUserManager()">✕</button>
+    </div>
+    <!-- Tabs -->
+    <div class="um-tabs">
+      <button class="um-tab active" id="tabUsuarios" onclick="switchUmTab('usuarios')">👤 Usuários <span class="um-pending-badge" id="pendingCount" style="display:none">0</span></button>
+      <button class="um-tab" id="tabPermissoes" onclick="switchUmTab('permissoes')">🔐 Permissões por Pasta</button>
+    </div>
+
+    <!-- Tab: Usuários -->
+    <div class="um-tab-panel active" id="panelUsuarios">
+      <div class="um-list" id="umList">
+        <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Carregando...</div>
+      </div>
+      <div class="um-divider"></div>
+      <div class="um-form">
+        <div class="um-form-title" id="umFormTitle">➕ Novo Usuário</div>
+        <div class="um-form-row">
+          <input class="um-input" id="umNewUser" placeholder="Usuário" autocomplete="off">
+          <input class="um-input" id="umNewPass" type="password" placeholder="Senha">
+          <select class="um-input" id="umNewRole" style="flex:0 0 90px">
+            <option value="false">Usuário</option>
+            <option value="true">Admin</option>
+          </select>
+          <button class="um-submit" id="umSubmit" onclick="umSaveUser()">Salvar</button>
+        </div>
+        <div class="um-msg" id="umMsg"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Permissões por Pasta -->
+    <div class="um-tab-panel" id="panelPermissoes">
+      <div style="display:flex;gap:10px;height:300px;padding:4px 0">
+        <!-- Folder list -->
+        <div style="flex:0 0 180px;overflow-y:auto;padding-right:4px">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;padding-left:2px">Pastas</div>
+          <div id="fpFolderList"></div>
+        </div>
+        <!-- Users for selected folder -->
+        <div style="flex:1;overflow-y:auto;border-left:1px solid var(--border);padding-left:12px">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Acesso à pasta</div>
+          <div id="fpUserList"><div style="color:var(--text3);font-size:12px;padding:20px 0;text-align:center">← Selecione uma pasta</div></div>
+          <div id="fpSaveRow" style="display:none;margin-top:10px">
+            <button class="um-submit" style="width:100%" onclick="fpSavePermissions()">💾 Salvar permissões</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:8px;padding:8px 10px;background:var(--bg3);border-radius:6px;font-size:10.5px;color:var(--text3);border:1px solid var(--border)">
+        💡 <strong>Dica:</strong> Pastas marcadas como <em>Aberta</em> são acessíveis para todos os usuários aprovados. Desmarque para restringir apenas aos usuários selecionados.
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1418,7 +2164,7 @@
         <span id="adFileName">—</span>
       </div>
       <div class="ad-footer-sep">·</div>
-      <div class="ad-footer-item">Sistema MedDocs</div>
+      <div class="ad-footer-item">Sistema SusDocs</div>
     </div>
   </div>
 </div>
@@ -1436,38 +2182,267 @@
   </div>
 </div>
 
+<!-- PENDING ACCESS OVERLAY -->
+<div id="pendingOverlay">
+  <div class="pending-panel">
+    <div class="pending-icon-wrap">🔒</div>
+    <div class="pending-title" id="pendingTitle">Acesso Pendente</div>
+    <div class="pending-msg" id="pendingMsg">Você não tem permissão para acessar esta pasta. Solicite ao administrador do sistema.</div>
+    <div class="pending-folder-info">
+      <span class="pending-folder-icon">📁</span>
+      <div>
+        <div style="font-size:9px;font-weight:600;color:#9aafc4;text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">Pasta restrita</div>
+        <div id="pendingFolderName" style="font-size:13px;font-weight:700;color:#1a2638">—</div>
+      </div>
+    </div>
+    <button class="pending-close-btn" onclick="closePendingOverlay()">Entendido</button>
+    <div style="margin-top:16px;font-size:10.5px;color:#9aafc4">Entre em contato com o administrador para solicitar acesso.</div>
+  </div>
+</div>
+
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
 
 // ==================== LOGIN ====================
-// ┌──────────────────────────────────────────────────────┐
-// │  ✏️  CREDENCIAIS DE ACESSO — altere aqui             │
-// │                                                      │
-// │  Você pode adicionar mais usuários à lista abaixo.   │
-// └──────────────────────────────────────────────────────┘
-const USUARIOS = [
-  { usuario: 'admin',    senha: 'meddocs2025' },
-  { usuario: 'sesab',    senha: 'sesab@2025'  },
-  // { usuario: 'novo',  senha: 'senha123'    },
+// ┌──────────────────────────────────────────────────────────────────────┐
+// │  ✏️  CONFIGURAÇÃO JSONBIN — siga os passos:                          │
+// │                                                                      │
+// │  1. Acesse https://jsonbin.io e crie uma conta gratuita              │
+// │  2. Vá em "API Keys" e copie sua Master Key                          │
+// │  3. Clique em "Create Bin", cole o JSON inicial abaixo e salve:      │
+// │     [{"usuario":"admin","senhaHash":"04ec5063...","isAdmin":true}]   │
+// │  4. Copie o Bin ID da URL e cole em JSONBIN_BIN_ID                   │
+// │  5. Cole sua Master Key em JSONBIN_API_KEY                           │
+// │                                                                      │
+// │  Senha padrão do admin: susdocs2025                                  │
+// └──────────────────────────────────────────────────────────────────────┘
+const JSONBIN_BIN_ID  = '69b163bcc3097a1dd5179aaa';
+const JSONBIN_API_KEY = '$2a$10$RWVOBCzux61lK4LBq5m2neznR82urnVZcOtksI8Zgrep5bKmvx2D2';
+
+// ─── Permissões de pasta (segundo bin JSONBin) ───────────────────────────────
+// Estrutura: { "NomePasta": { open: true|false, users: ["user1","user2"] }, ... }
+// Se open=true → qualquer usuário aprovado acessa
+// Se open=false → apenas usuários em users[] podem acessar (+ admins sempre)
+// Crie um segundo bin em jsonbin.io e cole o ID abaixo:
+const JSONBIN_PERMS_BIN_ID = '69b163bcc3097a1dd5179aab'; // ← mesmo bin, pasta diferente (ou crie novo)
+
+let _permsCache = null;
+
+async function getPermissoes(forceRefresh = false) {
+  if (_permsCache && !forceRefresh) return _permsCache;
+  if (JSONBIN_PERMS_BIN_ID === 'SEU_PERMS_BIN_ID' || JSONBIN_BIN_ID === 'SEU_BIN_ID_AQUI') {
+    _permsCache = {};
+    return _permsCache;
+  }
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_PERMS_BIN_ID}/latest`, {
+      headers: { 'X-Master-Key': JSONBIN_API_KEY }
+    });
+    if (!res.ok) { _permsCache = {}; return _permsCache; }
+    const data = await res.json();
+    _permsCache = (data.record && typeof data.record === 'object' && !Array.isArray(data.record)) ? data.record : {};
+    return _permsCache;
+  } catch(e) { _permsCache = {}; return _permsCache; }
+}
+
+async function savePermissoes(perms) {
+  if (JSONBIN_PERMS_BIN_ID === 'SEU_PERMS_BIN_ID' || JSONBIN_BIN_ID === 'SEU_BIN_ID_AQUI') {
+    _permsCache = perms; return;
+  }
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_PERMS_BIN_ID}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_API_KEY },
+    body: JSON.stringify(perms)
+  });
+  if (!res.ok) throw new Error('Erro ao salvar permissões');
+  _permsCache = perms;
+}
+
+// Verifica se o usuário logado pode acessar a pasta
+async function canAccessFolder(folderName) {
+  if (!_loggedUser) return false;
+  if (_loggedUser.isAdmin) return true; // admin acessa tudo
+  const perms = await getPermissoes();
+  const p = perms[folderName];
+  if (!p) return true; // sem configuração = aberta por padrão
+  if (p.open === true) return true;
+  return Array.isArray(p.users) && p.users.includes(_loggedUser.usuario);
+}
+
+let _usuariosCache = null;
+let _loggedUser    = null;
+
+// Usuários padrão para inicializar o bin (admin / susdocs2025)
+const _DEFAULT_USUARIOS = [
+  { usuario: 'admin', senhaHash: '04ec5063c3ff7aa8dd2c7d8b1d95aed3b24022487b899a91724e9d99d84b2927', isAdmin: true }
 ];
+
+async function getUsuarios(forceRefresh = false) {
+  if (_usuariosCache && !forceRefresh) return _usuariosCache;
+
+  if (JSONBIN_BIN_ID === 'SEU_BIN_ID_AQUI') {
+    // Fallback local — JSONBin não configurado
+    _usuariosCache = _DEFAULT_USUARIOS;
+    return _usuariosCache;
+  }
+
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+    headers: { 'X-Master-Key': JSONBIN_API_KEY }
+  });
+
+  if (!res.ok) throw new Error(`JSONBin retornou ${res.status}`);
+
+  const data = await res.json();
+  const record = data.record;
+
+  // Se o bin estiver vazio ou com formato inválido, inicializa com o admin padrão
+  if (!Array.isArray(record) || record.length === 0) {
+    await saveUsuarios(_DEFAULT_USUARIOS);
+    return _usuariosCache;
+  }
+
+  _usuariosCache = record;
+  return _usuariosCache;
+}
+
+async function saveUsuarios(lista) {
+  if (JSONBIN_BIN_ID === 'SEU_BIN_ID_AQUI') {
+    // Em modo local, apenas atualiza o cache em memória
+    _usuariosCache = lista;
+    return;
+  }
+
+  const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Master-Key': JSONBIN_API_KEY
+    },
+    body: JSON.stringify(lista)
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Erro ${res.status} ao salvar`);
+  }
+
+  _usuariosCache = lista; // Atualiza cache apenas após confirmação do servidor
+}
+
+// ┌──────────────────────────────────────────────────────────────────┐
+// │  ✏️  GOOGLE LOGIN — configure seu Client ID aqui                 │
+// │                                                                  │
+// │  1. Acesse: https://console.cloud.google.com/                    │
+// │  2. Crie um projeto e ative a API "Google Identity"              │
+// │  3. Em "Credenciais" crie um OAuth 2.0 Client ID (Web)          │
+// │  4. Adicione seu domínio em "Origens JavaScript autorizadas"     │
+// │  5. Cole o Client ID abaixo (substitua o texto de exemplo)       │
+// │                                                                  │
+// │  DOMÍNIOS PERMITIDOS (opcional): deixe vazio para aceitar todos  │
+// └──────────────────────────────────────────────────────────────────┘
+const GOOGLE_CLIENT_ID = '561863538667-ouqc1es448ap69677b011t9uc5ujbvsi.apps.googleusercontent.com';
+const GOOGLE_ALLOWED_DOMAINS = []; // Ex: ['sesab.ba.gov.br'] — vazio = qualquer e-mail
+
+function handleCredentialResponse(response) {
+  try {
+    // Decode JWT payload (sem validação — apenas para exibição no client)
+    const payload = JSON.parse(atob(response.credential.split('.')[1]));
+    const email = payload.email || '';
+    const name  = payload.name  || email;
+
+    // Verificar domínio permitido (se configurado)
+    if (GOOGLE_ALLOWED_DOMAINS.length > 0) {
+      const domain = email.split('@')[1] || '';
+      if (!GOOGLE_ALLOWED_DOMAINS.includes(domain)) {
+        showLoginError(`Acesso restrito. Domínio "${domain}" não autorizado.`);
+        return;
+      }
+    }
+
+    // Login bem-sucedido
+    successLogin(name);
+  } catch(e) {
+    showLoginError('Erro ao processar login Google. Tente novamente.');
+  }
+}
+
+function loginWithGoogle() {
+  const clientId = GOOGLE_CLIENT_ID;
+  if (!clientId || clientId.includes('SEU_CLIENT_ID')) {
+    document.getElementById('lsGoogleInfo').innerHTML =
+      '<span style="color:#e03d3d">⚠️ Configure o Google Client ID no código para usar este recurso.</span>';
+    return;
+  }
+  if (typeof google === 'undefined' || !google?.accounts?.id) {
+    document.getElementById('lsGoogleInfo').innerHTML =
+      '<span style="color:#e03d3d">⚠️ SDK Google não carregado. Verifique sua conexão.</span>';
+    return;
+  }
+  google.accounts.id.prompt();
+}
+
+function showLoginError(msg) {
+  const err  = document.getElementById('lsError');
+  const card = document.getElementById('lsCard');
+  document.getElementById('lsErrorMsg').textContent = msg;
+  err.classList.add('visible');
+  card.classList.remove('shake');
+  void card.offsetWidth;
+  card.classList.add('shake');
+}
+
+function successLogin(displayName, isAdmin) {
+  document.getElementById('loginScreen').style.transition = 'opacity 0.45s ease';
+  document.getElementById('loginScreen').style.opacity = '0';
+  setTimeout(() => {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.querySelector('.app').classList.remove('app-hidden');
+    // Mostra botão de gerenciar usuários apenas para admins
+    const adminBtn = document.getElementById('btnUsuarios');
+    if (adminBtn) adminBtn.style.display = isAdmin ? '' : 'none';
+    toast(`Bem-vindo, ${displayName}! 👋`, 'success');
+  }, 450);
+}
 
 (function initLogin() {
   // Hide app until logged in
   document.querySelector('.app').classList.add('app-hidden');
   // Focus user field
   setTimeout(() => document.getElementById('lsUser')?.focus(), 300);
+
+  // Initialize Google Identity Services when SDK loads
+  window.addEventListener('load', function() {
+    if (typeof google !== 'undefined' && google?.accounts?.id &&
+        GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('SEU_CLIENT_ID')) {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleCredentialResponse,
+        auto_select: false,
+      });
+    }
+  });
 })();
 
-function doLogin() {
+// Gera hash SHA-256 de uma string usando a Web Crypto API (nativa no navegador)
+async function sha256(str) {
+  const buffer = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(str)
+  );
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function doLogin() {
   const user = document.getElementById('lsUser').value.trim();
   const pass = document.getElementById('lsPass').value;
   const btn  = document.getElementById('lsBtn');
   const err  = document.getElementById('lsError');
   const card = document.getElementById('lsCard');
 
-  // Clear previous errors
   err.classList.remove('visible');
   document.getElementById('lsUser').classList.remove('error');
   document.getElementById('lsPass').classList.remove('error');
@@ -1477,29 +2452,30 @@ function doLogin() {
     err.classList.add('visible');
     if (!user) document.getElementById('lsUser').classList.add('error');
     if (!pass) document.getElementById('lsPass').classList.add('error');
-    card.classList.remove('shake');
-    void card.offsetWidth; // reflow to re-trigger animation
-    card.classList.add('shake');
+    card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
     return;
   }
 
-  // Loading state
   btn.classList.add('loading');
 
-  setTimeout(() => {
-    const match = USUARIOS.find(u =>
-      u.usuario.toLowerCase() === user.toLowerCase() && u.senha === pass
+  try {
+    const passHash = await sha256(pass);
+    const usuarios = await getUsuarios();
+    const match = usuarios.find(u =>
+      u.usuario.toLowerCase() === user.toLowerCase() && u.senhaHash === passHash
     );
 
     if (match) {
-      // Success — fade out login screen
-      document.getElementById('loginScreen').style.transition = 'opacity 0.45s ease';
-      document.getElementById('loginScreen').style.opacity = '0';
-      setTimeout(() => {
-        document.getElementById('loginScreen').style.display = 'none';
-        document.querySelector('.app').classList.remove('app-hidden');
-        toast(`Bem-vindo, ${match.usuario}! 👋`, 'success');
-      }, 450);
+      // Bloqueia login de usuários não aprovados (exceto admins)
+      if (!match.isAdmin && match.aprovado === false) {
+        btn.classList.remove('loading');
+        document.getElementById('lsErrorMsg').textContent = 'Sua conta ainda não foi aprovada pelo administrador.';
+        err.classList.add('visible');
+        card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
+        return;
+      }
+      _loggedUser = match;
+      successLogin(match.usuario, match.isAdmin);
     } else {
       btn.classList.remove('loading');
       document.getElementById('lsErrorMsg').textContent = 'Usuário ou senha incorretos.';
@@ -1507,12 +2483,111 @@ function doLogin() {
       document.getElementById('lsUser').classList.add('error');
       document.getElementById('lsPass').classList.add('error');
       document.getElementById('lsPass').value = '';
-      card.classList.remove('shake');
-      void card.offsetWidth;
-      card.classList.add('shake');
+      card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake');
       setTimeout(() => document.getElementById('lsPass').focus(), 100);
     }
-  }, 700); // simula verificação
+  } catch(e) {
+    btn.classList.remove('loading');
+    document.getElementById('lsErrorMsg').textContent = 'Erro ao conectar. Tente novamente.';
+    err.classList.add('visible');
+  }
+}
+
+// ==================== REGISTER ====================
+function showRegisterPanel() {
+  // Reset form
+  document.getElementById('lsRegUser').value = '';
+  document.getElementById('lsRegPass').value = '';
+  document.getElementById('lsRegPass2').value = '';
+  document.getElementById('lsRegError').classList.remove('visible');
+  document.getElementById('lsRegSuccess').style.display = 'none';
+  document.getElementById('lsRegForm').style.display = '';
+  document.getElementById('lsRegBtn').disabled = false;
+  document.getElementById('lsRegBtnText').textContent = 'Criar minha conta';
+
+  // Switch panels
+  document.getElementById('lsCard').classList.add('hidden');
+  document.getElementById('lsRegPanel').classList.remove('hidden');
+  setTimeout(() => document.getElementById('lsRegUser').focus(), 50);
+}
+
+function showLoginPanel() {
+  document.getElementById('lsRegPanel').classList.add('hidden');
+  document.getElementById('lsCard').classList.remove('hidden');
+  setTimeout(() => document.getElementById('lsUser').focus(), 50);
+}
+
+async function doRegister() {
+  const user  = document.getElementById('lsRegUser').value.trim();
+  const pass  = document.getElementById('lsRegPass').value;
+  const pass2 = document.getElementById('lsRegPass2').value;
+  const btn   = document.getElementById('lsRegBtn');
+  const errEl = document.getElementById('lsRegError');
+
+  errEl.classList.remove('visible');
+  document.getElementById('lsRegUser').classList.remove('error');
+  document.getElementById('lsRegPass').classList.remove('error');
+  document.getElementById('lsRegPass2').classList.remove('error');
+
+  // Validações
+  if (!user) {
+    showRegError('Informe um nome de usuário.', ['lsRegUser']); return;
+  }
+  if (user.length < 3) {
+    showRegError('Usuário deve ter pelo menos 3 caracteres.', ['lsRegUser']); return;
+  }
+  if (!/^[a-zA-Z0-9_.@-]+$/.test(user)) {
+    showRegError('Usuário contém caracteres inválidos.', ['lsRegUser']); return;
+  }
+  if (!pass) {
+    showRegError('Informe uma senha.', ['lsRegPass']); return;
+  }
+  if (pass.length < 4) {
+    showRegError('Senha deve ter pelo menos 4 caracteres.', ['lsRegPass']); return;
+  }
+  if (pass !== pass2) {
+    showRegError('As senhas não coincidem.', ['lsRegPass', 'lsRegPass2']); return;
+  }
+
+  btn.disabled = true;
+  document.getElementById('lsRegBtnText').textContent = 'Criando conta...';
+
+  try {
+    const usuarios = await getUsuarios(true);
+
+    // Verifica duplicata
+    if (usuarios.find(u => u.usuario.toLowerCase() === user.toLowerCase())) {
+      showRegError('Este nome de usuário já está em uso.', ['lsRegUser']);
+      btn.disabled = false;
+      document.getElementById('lsRegBtnText').textContent = 'Criar minha conta';
+      return;
+    }
+
+    const senhaHash = await sha256(pass);
+    usuarios.push({ usuario: user, senhaHash, isAdmin: false, aprovado: false });
+    await saveUsuarios(usuarios);
+
+    // Mostra tela de sucesso
+    document.getElementById('lsRegForm').style.display = 'none';
+    document.getElementById('lsRegSuccess').style.display = 'flex';
+    // Volta para login automaticamente após 2.5s
+    setTimeout(() => {
+      showLoginPanel();
+      document.getElementById('lsUser').value = user;
+      document.getElementById('lsPass').focus();
+    }, 2500);
+
+  } catch(e) {
+    showRegError('Erro ao criar conta: ' + e.message, []);
+    btn.disabled = false;
+    document.getElementById('lsRegBtnText').textContent = 'Criar minha conta';
+  }
+}
+
+function showRegError(msg, fields = []) {
+  document.getElementById('lsRegErrorMsg').textContent = msg;
+  document.getElementById('lsRegError').classList.add('visible');
+  fields.forEach(id => document.getElementById(id)?.classList.add('error'));
 }
 
 function togglePw() {
@@ -1527,54 +2602,109 @@ function togglePw() {
   }
 }
 
-// ┌─────────────────────────────────────────────────────────────────────────┐
-// │                  ✏️  ADICIONE SEUS LINKS AQUI                           │
-// │                                                                         │
-// │  Para cada arquivo, preencha:                                           │
-// │    nome  → como vai aparecer no gerenciador                             │
-// │    url   → link de compartilhamento do Google Drive                     │
-// │    pasta → nome da pasta onde ficará (crie novas livremente)            │
-// │                                                                         │
-// │  O ícone é detectado AUTOMATICAMENTE pelo tipo do link:                 │
-// │    docs.google.com/spreadsheets  → 🟢 Sheets                           │
-// │    docs.google.com/document      → 🔵 Docs                             │
-// │    docs.google.com/presentation  → 🟡 Slides                           │
-// │    docs.google.com/forms         → 🟣 Forms                            │
-// │    drive.google.com/file         → 🔴 PDF / arquivo Drive               │
-// └─────────────────────────────────────────────────────────────────────────┘
+// ╔══════════════════════════════════════════════════════════════════════════════╗
+// ║  ✏️  ESTRUTURA DE PASTAS — defina a hierarquia aqui, no código              ║
+// ║                                                                              ║
+// ║  Use '/' para criar subpastas em qualquer nível de profundidade.             ║
+// ║  Pastas vazias (sem arquivos) também são criadas normalmente.                ║
+// ║                                                                              ║
+// ║  Exemplos:                                                                   ║
+// ║    'Projetos'                      → pasta simples na raiz                   ║
+// ║    'Projetos/Hospitais'            → subpasta dentro de Projetos             ║
+// ║    'Projetos/Hospitais/2025'       → sub-subpasta (3 níveis)                 ║
+// ║    'Projetos/Hospitais/2025/Abril' → qualquer profundidade                   ║
+// ╚══════════════════════════════════════════════════════════════════════════════╝
 
-const MEUS_LINKS = [
+const MINHAS_PASTAS = [
 
-  // ── PASTAS DO GOOGLE DRIVE ────────────────────────────────────────────
-  { nome: 'Hospital Geral de Itaparica — Etapa 2', pasta: '', url: 'https://drive.google.com/file/d/1sEsdPe59tLwiqokD4r5xRHLBZywVyoMo/view?usp=sharing' },
+  // ── Estrutura de pastas (ordem define a exibição) ─────────────────────────
+  'Hospital Geral de Itaparica',
+  'Hospital Geral de Itaparica/Projetos',
+  'Hospital Geral de Itaparica/Análises',
 
-  // ── ADICIONE NOVOS LINKS ABAIXO ↓ ─────────────────────────────────────
-  // { nome: 'Meu Arquivo',  pasta: '',  url: 'https://docs.google.com/...' },
-  // { nome: 'Minha Pasta Drive', pasta: '', url: 'https://drive.google.com/drive/folders/...' },
+  'IPERBA',
+  'IPERBA/Bloco Cirúrgico',
+  'IPERBA/Porta de Entrada',
+
+  'Elevadores- CEDEBA',
+
+  // ── ✏️  Adicione novas pastas abaixo ↓ ────────────────────────────────────
+  // 'Minha Nova Pasta',
+  // 'Minha Nova Pasta/Subpasta',
+  // 'Minha Nova Pasta/Subpasta/2025',
 
 ];
 
-// ── Geração automática da estrutura de pastas a partir de MEUS_LINKS ──────
+// ╔══════════════════════════════════════════════════════════════════════════════╗
+// ║  ✏️  ARQUIVOS — associe cada arquivo a uma pasta definida acima             ║
+// ║                                                                              ║
+// ║    nome  → nome que aparece no gerenciador                                   ║
+// ║    pasta → deve corresponder a uma entrada de MINHAS_PASTAS (ou ser novo)    ║
+// ║    url   → link de compartilhamento do Google Drive                          ║
+// ║                                                                              ║
+// ║  Ícone detectado automaticamente pelo tipo do link:                          ║
+// ║    docs.google.com/spreadsheets  → 🟢 Sheets                                ║
+// ║    docs.google.com/document      → 🔵 Docs                                  ║
+// ║    docs.google.com/presentation  → 🟡 Slides                                ║
+// ║    docs.google.com/forms         → 🟣 Forms                                 ║
+// ║    drive.google.com/file         → 🔴 PDF / arquivo Drive                   ║
+// ╚══════════════════════════════════════════════════════════════════════════════╝
+
+const MEUS_LINKS = [
+
+  // ── 📁 Hospital Geral de Itaparica ───────────────────────────────────────
+  { nome: 'Hospital Geral de Itaparica — Etapa 2', pasta: 'Hospital Geral de Itaparica/Projetos', url: 'https://drive.google.com/file/d/1sEsdPe59tLwiqokD4r5xRHLBZywVyoMo/view?usp=drive_link' },
+  { nome: 'Analises Hospital Geral de Itaparica',   pasta: 'Hospital Geral de Itaparica/Análises', url: 'https://drive.google.com/file/d/1X0kvW07UJXi8FaAlRfochZfB-NHuzx_m/view?usp=drive_link' },
+
+  // ── 📁 IPERBA ────────────────────────────────────────────────────────────
+  { nome: 'IPERBA - Bloco Cirúrgico UTI',               pasta: 'IPERBA/Bloco Cirúrgico',   url: 'https://drive.google.com/file/d/1jrZCtLnMImaFDJVrzpDqygKq9DYWBGig/view?usp=sharing' },
+  { nome: 'IPERBA - Porta de Entrada e Banco de Leite', pasta: 'IPERBA/Porta de Entrada',  url: 'https://drive.google.com/file/d/18uOEurCp1EJuVKqYFsUSFaxoa6IfSHHB/view?usp=sharing' },
+
+  // ── 📁 Elevadores- CEDEBA ────────────────────────────────────────────────────────
+  { nome: 'S25012 - Elevador CAS', pasta: 'Elevadores- CEDEBA', url: 'https://drive.google.com/file/d/1KlAChFinNPC3OPycE-d7sr1HS5MZM9Pz/view?usp=sharing' },
+
+  // ── ✏️  Adicione novos arquivos abaixo ↓ ──────────────────────────────────
+  // { nome: 'Meu Arquivo', pasta: 'Minha Nova Pasta/Subpasta', url: 'https://docs.google.com/...' },
+
+];
+
+// ── Constrói a árvore de pastas a partir de MINHAS_PASTAS + MEUS_LINKS ───────
 function buildFsFromLinks(links) {
   const extMap = { sheets:'gsheet', docs:'gdoc', slides:'gslides', forms:'gform', drawings:'gdraw', 'drive-file':'gdrive', link:'gdrive', autocad:'dwg' };
   const root = { name: 'Início', type: 'folder', modified: new Date(), children: [] };
-  const folderMap = {};
 
+  // Retorna (ou cria) o nó de pasta para um caminho 'A/B/C'
+  function getOrCreateFolder(pathStr) {
+    const parts = pathStr.split('/').map(p => p.trim()).filter(Boolean);
+    let current = root;
+    for (const part of parts) {
+      let child = current.children.find(c => c.type === 'folder' && c.name === part);
+      if (!child) {
+        child = { name: part, type: 'folder', modified: new Date(), children: [] };
+        current.children.push(child);
+      }
+      current = child;
+    }
+    return current;
+  }
+
+  // 1. Cria todas as pastas declaradas em MINHAS_PASTAS (inclusive as vazias)
+  (typeof MINHAS_PASTAS !== 'undefined' ? MINHAS_PASTAS : []).forEach(path => {
+    if (path && path.trim()) getOrCreateFolder(path.trim());
+  });
+
+  // 2. Insere os arquivos de MEUS_LINKS nas pastas correspondentes
   links.forEach(({ nome, pasta, url }) => {
     const type = getDriveTypeEarly(url, nome);
     const ext  = url.includes('.pdf') ? 'pdf' : (extMap[type] || 'gdrive');
-    // Drive folders get a special type so they show folder icon + open URL on dblclick
     const itemType = type === 'drive-folder' ? 'drive-folder' : 'file';
     const item = { name: nome, type: itemType, ext, size: 0, modified: new Date(), url };
 
     if (!pasta) {
       root.children.push(item);
     } else {
-      if (!folderMap[pasta]) {
-        folderMap[pasta] = { name: pasta, type: 'folder', modified: new Date(), children: [] };
-        root.children.push(folderMap[pasta]);
-      }
-      folderMap[pasta].children.push(item);
+      const targetFolder = getOrCreateFolder(pasta);
+      targetFolder.children.push(item);
     }
   });
   return root;
@@ -1597,9 +2727,18 @@ function getDriveTypeEarly(url, nome) {
 // ==================== DATA ====================
 let fs = buildFsFromLinks(MEUS_LINKS);
 
+// Pasta local — abre X:\CAS diretamente no explorador de arquivos
+fs.children.unshift({
+  name: 'CAS',
+  type: 'local-folder',
+  localPath: 'file:///X:/CAS',
+  modified: new Date(),
+  children: []
+});
+
 // ==================== STATE ====================
 let currentPath = ['Início'];
-let history = [['Início']];
+let navHistory = [['Início']];
 let historyIndex = 0;
 let viewMode = 'grid';
 let sortBy = 'name';
@@ -1620,35 +2759,71 @@ function getNode(path) {
   return node;
 }
 
-function navigateTo(path, addHistory = true) {
+function navigateTo(path, addHistory = true, fromBrowser = false) {
   const node = getNode(path);
   if (!node || node.type !== 'folder') return;
-  
+
+  // Verifica permissão quando navega para dentro de uma pasta (caminho mais profundo que o atual)
+  const targetFolderName = path[path.length - 1];
+  const isGoingDeeper = path.length > currentPath.length;
+  if (isGoingDeeper && targetFolderName !== 'Início') {
+    canAccessFolder(targetFolderName).then(allowed => {
+      if (!allowed) {
+        showPendingOverlay(targetFolderName);
+      } else {
+        _doNavigateTo(path, addHistory, fromBrowser);
+      }
+    });
+    return;
+  }
+
+  _doNavigateTo(path, addHistory, fromBrowser);
+}
+
+function _doNavigateTo(path, addHistory = true, fromBrowser = false) {
   currentPath = [...path];
   selectedItems.clear();
   
   if (addHistory) {
-    history = history.slice(0, historyIndex + 1);
-    history.push([...path]);
-    historyIndex = history.length - 1;
+    navHistory = navHistory.slice(0, historyIndex + 1);
+    navHistory.push([...path]);
+    historyIndex = navHistory.length - 1;
+    // Sync browser history — only when navigation is NOT triggered by browser back/fwd
+    if (!fromBrowser) {
+      window.history.pushState({ navPath: [...path] }, '', '#' + encodeURIComponent(path.join('/')));
+    }
   }
+
+  // Close sidebar drawer on mobile after navigation
+  if (window.innerWidth <= 768) closeSidebar();
   
   render();
 }
 
 function navigateBack() {
-  if (historyIndex > 0) {
-    historyIndex--;
-    navigateTo(history[historyIndex], false);
-  }
+  // Delegate to the browser — popstate listener handles the rest
+  window.history.back();
 }
 
 function navigateForward() {
-  if (historyIndex < history.length - 1) {
-    historyIndex++;
-    navigateTo(history[historyIndex], false);
-  }
+  // Delegate to the browser — popstate listener handles the rest
+  window.history.forward();
 }
+
+// React to browser back / forward buttons
+window.addEventListener('popstate', function(e) {
+  if (e.state && e.state.navPath) {
+    const path = e.state.navPath;
+    // Keep internal index in sync
+    const idx = navHistory.findIndex(h => h.join('/') === path.join('/'));
+    if (idx !== -1) historyIndex = idx;
+    _doNavigateTo(path, false, true);
+  } else {
+    // No state — fall back to root
+    historyIndex = 0;
+    _doNavigateTo(['Início'], false, true);
+  }
+});
 
 function navigateUp() {
   if (currentPath.length > 1) {
@@ -1776,6 +2951,7 @@ function getIcon(item, size = 32) {
     if (item.ext === 'pdf') return getDriveIconSVG('pdf', size);
     return getDriveIconSVG(type, size);
   }
+  if (item.type === 'local-folder') return '🗂️';
   if (item.type === 'folder') return '📁';
   const icons = {
     pdf: '📕', docx: '📘', doc: '📘', txt: '📝', md: '📝',
@@ -1961,7 +3137,7 @@ function getTotalSize(item) {
 
 function updateNavBtns() {
   document.getElementById('btnBack').disabled = historyIndex <= 0;
-  document.getElementById('btnFwd').disabled = historyIndex >= history.length - 1;
+  document.getElementById('btnFwd').disabled = historyIndex >= navHistory.length - 1;
 }
 
 // ==================== SELECTION ====================
@@ -1984,8 +3160,20 @@ function handleDblClick(name) {
   const node = getNode(currentPath);
   const item = node?.children?.find(c => c.name === name);
   if (!item) return;
+  if (item.type === 'local-folder') {
+    toast('Abrindo pasta local CAS...', 'info');
+    window.location.href = item.localPath;
+    return;
+  }
   if (item.type === 'folder') {
-    navigateTo([...currentPath, name]);
+    // Verifica permissão de acesso à pasta
+    canAccessFolder(name).then(allowed => {
+      if (!allowed) {
+        showPendingOverlay(name);
+      } else {
+        navigateTo([...currentPath, name]);
+      }
+    });
   } else if (item.type === 'drive-folder' && item.url) {
     openDriveFile(item);
   } else if (item.url) {
@@ -1999,54 +3187,8 @@ function handleDblClick(name) {
 let _adCurrentItem = null;
 
 function openDriveFile(item) {
-  _adCurrentItem = item;
   toast(`Abrindo "${item.name}"...`, 'info');
-
-  // Open in popup so we can monitor it
-  const popup = window.open(
-    item.url,
-    'drivePopup',
-    'width=1100,height=750,noopener=0'
-  );
-
-  if (!popup || popup.closed) {
-    // Popup was blocked — fallback: show access denied hint
-    showAccessDenied(item);
-    return;
-  }
-
-  // Detect redirect to Google Login via cross-origin polling:
-  // - If popup goes to accounts.google.com it becomes cross-origin → throws
-  // - But Drive files are ALSO cross-origin → also throw
-  // Strategy: after ~1 s, if popup CLOSED on its own (some browsers auto-close
-  // login redirects) OR main window regains focus immediately, flag access denied.
-  let resolved = false;
-  let focusTimer = null;
-
-  const onFocus = () => {
-    // Main window got focus back very quickly (< 3 s) — likely a login bounce
-    if (!resolved) {
-      clearTimeout(focusTimer);
-      resolved = true;
-      window.removeEventListener('focus', onFocus);
-      // Give browser 600ms to decide then check if popup closed or is on login
-      setTimeout(() => checkPopupStatus(popup, item), 600);
-    }
-  };
-
-  // Only attach the focus listener after a brief delay so the initial
-  // focus-loss to the popup itself doesn't trigger it
-  setTimeout(() => {
-    window.addEventListener('focus', onFocus);
-  }, 800);
-
-  // Fallback cleanup after 8 s regardless
-  setTimeout(() => {
-    if (!resolved) {
-      resolved = true;
-      window.removeEventListener('focus', onFocus);
-    }
-  }, 8000);
+  window.location.href = item.url;
 }
 
 function checkPopupStatus(popup, item) {
@@ -2097,9 +3239,21 @@ function closeAccessDenied(e) {
   document.getElementById('accessDeniedOverlay').style.display = 'none';
 }
 
+// ==================== PENDING / RESTRICTED FOLDER OVERLAY ====================
+function showPendingOverlay(folderName) {
+  document.getElementById('pendingFolderName').textContent = folderName;
+  const overlay = document.getElementById('pendingOverlay');
+  overlay.classList.add('visible');
+}
+
+function closePendingOverlay() {
+  document.getElementById('pendingOverlay').classList.remove('visible');
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     document.getElementById('accessDeniedOverlay').style.display = 'none';
+    document.getElementById('pendingOverlay').classList.remove('visible');
   }
 });
 
@@ -2131,6 +3285,7 @@ function showCtxMenu(e, name) {
   const menu = document.getElementById('contextMenu');
   menu.innerHTML = `
     ${isFolder ? `<div class="ctx-item" onclick="handleDblClick('${name}'); closeCtxMenu()"><span class="ctx-icon">📂</span> Abrir</div>` : ''}
+    ${isFolder ? `<div class="ctx-item" onclick="openModalInFolder('${name.replace(/'/g,"\\'")}'); closeCtxMenu()"><span class="ctx-icon">📁</span> Nova pasta aqui</div>` : ''}
     ${!isFolder && item?.url ? `<div class="ctx-item" onclick="openDriveFile(${JSON.stringify(item)}); closeCtxMenu()"><span class="ctx-icon">🔗</span> Abrir no Google Drive</div>` : ''}
     ${!isFolder && !item?.url ? `<div class="ctx-item" onclick="toast('Abrindo arquivo...','info'); closeCtxMenu()"><span class="ctx-icon">▶</span> Abrir</div>` : ''}
     <div class="ctx-sep"></div>
@@ -2285,6 +3440,43 @@ function createItem(type) {
   closeModal();
   render();
   toast(`"${name}" criado com sucesso`, 'success');
+}
+
+// Cria uma subpasta DENTRO de uma pasta existente sem precisar navegar até ela
+function openModalInFolder(parentName) {
+  const overlay = document.getElementById('modalOverlay');
+  document.getElementById('modalTitle').textContent = '📁 Nova Subpasta';
+  document.getElementById('modalSub').textContent = `Criar pasta dentro de "${parentName}"`;
+  const input = document.getElementById('modalInput');
+  input.style.display = '';
+  input.value = 'Nova pasta';
+  input.placeholder = 'Nome da subpasta';
+  document.getElementById('modalBtns').innerHTML = `
+    <button class="modal-btn" onclick="closeModal()">Cancelar</button>
+    <button class="modal-btn primary" onclick="createSubFolder(${JSON.stringify(parentName)})">Criar</button>
+  `;
+  overlay.style.display = 'flex';
+  setTimeout(() => { input.select(); input.focus(); }, 50);
+}
+
+function createSubFolder(parentName) {
+  const name = document.getElementById('modalInput').value.trim();
+  if (!name) return;
+
+  const currentNode = getCurrentNode();
+  const parentNode = currentNode.children?.find(c => c.name === parentName && c.type === 'folder');
+  if (!parentNode) { toast('Pasta não encontrada', 'error'); return; }
+
+  if (!parentNode.children) parentNode.children = [];
+  if (parentNode.children.find(c => c.name === name)) {
+    toast(`"${name}" já existe dentro de "${parentName}"`, 'error');
+    return;
+  }
+
+  parentNode.children.push({ name, type: 'folder', modified: new Date(), children: [] });
+  closeModal();
+  render();
+  toast(`Pasta "${name}" criada dentro de "${parentName}"`, 'success');
 }
 
 function deleteSelected() {
@@ -2528,6 +3720,302 @@ function toast(msg, type = 'info') {
   setTimeout(() => el.remove(), 2800);
 }
 
+// ==================== USER MANAGER ====================
+let _umEditingUser = null; // nome do usuário sendo editado (null = novo)
+
+async function openUserManager() {
+  _umEditingUser = null;
+  document.getElementById('userManagerOverlay').classList.add('open');
+  resetUmForm();
+  await renderUmList();
+}
+
+function closeUserManager() {
+  document.getElementById('userManagerOverlay').classList.remove('open');
+}
+
+async function renderUmList() {
+  const list = document.getElementById('umList');
+  list.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Carregando...</div>';
+  try {
+    const usuarios = await getUsuarios(true);
+
+    // Atualiza badge de pendentes
+    const pendingUsers = usuarios.filter(u => !u.isAdmin && u.aprovado === false);
+    const badge = document.getElementById('pendingCount');
+    if (badge) {
+      if (pendingUsers.length > 0) { badge.textContent = pendingUsers.length; badge.style.display = ''; }
+      else { badge.style.display = 'none'; }
+    }
+
+    if (!usuarios.length) {
+      list.innerHTML = '<div style="color:var(--text3);font-size:12px;text-align:center;padding:20px">Nenhum usuário cadastrado.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    usuarios.forEach(u => {
+      const isMe = _loggedUser && u.usuario === _loggedUser.usuario;
+      const initials = u.usuario.substring(0,2).toUpperCase();
+      const isPending = !u.isAdmin && u.aprovado === false;
+      const row = document.createElement('div');
+      row.className = 'um-row';
+      row.style.opacity = isPending ? '0.9' : '1';
+      row.innerHTML = `
+        <div class="um-avatar" style="${isPending ? 'background:linear-gradient(135deg,#f4b400,#e8820c)' : ''}">${initials}</div>
+        <div class="um-info">
+          <div class="um-name">${u.usuario}${isMe ? ' <span style="font-size:10px;color:var(--text3)">(você)</span>' : ''}
+            ${isPending ? '<span style="font-size:10px;color:#e8820c;font-weight:700;margin-left:4px">⏳ Aguardando aprovação</span>' : ''}
+          </div>
+        </div>
+        <span class="um-badge ${u.isAdmin ? '' : (isPending ? '' : 'user')}" style="${isPending ? 'background:rgba(244,180,0,0.15);color:#c87000;border-color:rgba(244,180,0,0.4)' : ''}">${u.isAdmin ? 'Admin' : (isPending ? 'Pendente' : 'Usuário')}</span>
+        <div class="um-actions" style="gap:4px;flex-wrap:wrap">
+          ${isPending ? `<button class="um-approve-btn" onclick="umApproveUser('${u.usuario}')">✓ Aprovar</button>` : ''}
+          ${isPending ? `<button class="um-reject-btn" onclick="umRejectUser('${u.usuario}')">✕ Recusar</button>` : ''}
+          ${!isPending ? `<button class="um-btn" onclick="umEditUser('${u.usuario}')" title="Editar">✏️</button>` : ''}
+          ${isMe ? '' : `<button class="um-btn danger" onclick="umDeleteUser('${u.usuario}')" title="Remover">🗑️</button>`}
+        </div>
+      `;
+      list.appendChild(row);
+    });
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--warn);font-size:12px;text-align:center;padding:20px">Erro ao carregar usuários.</div>';
+  }
+}
+
+function resetUmForm(label = '➕ Novo Usuário', btnLabel = 'Criar') {
+  _umEditingUser = null;
+  document.getElementById('umFormTitle').textContent = label;
+  document.getElementById('umNewUser').value = '';
+  document.getElementById('umNewUser').disabled = false;
+  document.getElementById('umNewPass').value = '';
+  document.getElementById('umNewPass').placeholder = 'Senha';
+  document.getElementById('umNewRole').value = 'false';
+  document.getElementById('umSubmit').textContent = btnLabel;
+  document.getElementById('umMsg').textContent = '';
+  document.getElementById('umMsg').className = 'um-msg';
+}
+
+async function umEditUser(nome) {
+  const usuarios = await getUsuarios();
+  const u = usuarios.find(x => x.usuario === nome);
+  if (!u) return;
+  _umEditingUser = nome;
+  document.getElementById('umFormTitle').textContent = `✏️ Editando: ${nome}`;
+  document.getElementById('umNewUser').value = u.usuario;
+  document.getElementById('umNewUser').disabled = true;
+  document.getElementById('umNewPass').value = '';
+  document.getElementById('umNewPass').placeholder = 'Nova senha (deixe em branco para manter)';
+  document.getElementById('umNewRole').value = String(u.isAdmin);
+  document.getElementById('umSubmit').textContent = 'Salvar';
+  document.getElementById('umMsg').textContent = '';
+  document.getElementById('umNewUser').closest('.um-form').querySelector('.um-input').focus();
+}
+
+async function umSaveUser() {
+  const btn  = document.getElementById('umSubmit');
+  const msg  = document.getElementById('umMsg');
+  const nome = document.getElementById('umNewUser').value.trim();
+  const pass = document.getElementById('umNewPass').value;
+  const isAdmin = document.getElementById('umNewRole').value === 'true';
+
+  msg.textContent = '';
+  msg.className = 'um-msg';
+
+  if (!nome) { msg.textContent = 'Informe o nome do usuário.'; msg.className = 'um-msg err'; return; }
+  if (!_umEditingUser && !pass) { msg.textContent = 'Informe uma senha.'; msg.className = 'um-msg err'; return; }
+  if (pass && pass.length < 4) { msg.textContent = 'Senha muito curta (mínimo 4 caracteres).'; msg.className = 'um-msg err'; return; }
+
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  try {
+    // Sempre busca dados frescos antes de salvar para evitar sobrescrever dados de outra sessão
+    const usuarios = await getUsuarios(true);
+
+    if (_umEditingUser) {
+      // Editar existente
+      const idx = usuarios.findIndex(u => u.usuario === _umEditingUser);
+      if (idx < 0) throw new Error('Usuário não encontrado');
+      if (pass) usuarios[idx].senhaHash = await sha256(pass);
+      usuarios[idx].isAdmin = isAdmin;
+    } else {
+      // Criar novo — verifica duplicata
+      if (usuarios.find(u => u.usuario.toLowerCase() === nome.toLowerCase())) {
+        msg.textContent = 'Este usuário já existe.';
+        msg.className = 'um-msg err';
+        btn.disabled = false;
+        btn.textContent = _umEditingUser ? 'Salvar' : 'Criar';
+        return;
+      }
+      usuarios.push({ usuario: nome, senhaHash: await sha256(pass), isAdmin, aprovado: true });
+    }
+
+    await saveUsuarios(usuarios); // lança exceção se falhar
+    msg.textContent = _umEditingUser ? '✓ Usuário atualizado!' : '✓ Usuário criado com sucesso!';
+    msg.className = 'um-msg ok';
+    resetUmForm();
+    await renderUmList();
+  } catch(e) {
+    msg.textContent = '✕ Erro: ' + e.message;
+    msg.className = 'um-msg err';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = _umEditingUser ? 'Salvar' : 'Criar';
+  }
+}
+
+async function umDeleteUser(nome) {
+  if (!confirm(`Remover o usuário "${nome}"? Esta ação não pode ser desfeita.`)) return;
+  try {
+    const usuarios = await getUsuarios(true);
+    // Impede remover o último admin
+    const admins = usuarios.filter(u => u.isAdmin);
+    const alvo   = usuarios.find(u => u.usuario === nome);
+    if (alvo?.isAdmin && admins.length === 1) {
+      toast('Não é possível remover o único administrador.', 'error');
+      return;
+    }
+    const nova = usuarios.filter(u => u.usuario !== nome);
+    await saveUsuarios(nova);
+    await renderUmList();
+    toast(`Usuário "${nome}" removido.`, 'success');
+  } catch(e) {
+    toast('Erro ao remover: ' + e.message, 'error');
+  }
+}
+
+// ==================== APPROVE / REJECT USERS ====================
+async function umApproveUser(nome) {
+  try {
+    const usuarios = await getUsuarios(true);
+    const idx = usuarios.findIndex(u => u.usuario === nome);
+    if (idx < 0) return;
+    usuarios[idx].aprovado = true;
+    await saveUsuarios(usuarios);
+    await renderUmList();
+    toast(`✓ Usuário "${nome}" aprovado!`, 'success');
+  } catch(e) {
+    toast('Erro ao aprovar: ' + e.message, 'error');
+  }
+}
+
+async function umRejectUser(nome) {
+  if (!confirm(`Recusar e remover a conta de "${nome}"? Ação irreversível.`)) return;
+  try {
+    const usuarios = await getUsuarios(true);
+    const nova = usuarios.filter(u => u.usuario !== nome);
+    await saveUsuarios(nova);
+    await renderUmList();
+    toast(`Conta de "${nome}" removida.`, 'info');
+  } catch(e) {
+    toast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ==================== TAB SWITCHER ====================
+function switchUmTab(tab) {
+  document.getElementById('panelUsuarios').classList.toggle('active', tab === 'usuarios');
+  document.getElementById('panelPermissoes').classList.toggle('active', tab === 'permissoes');
+  document.getElementById('tabUsuarios').classList.toggle('active', tab === 'usuarios');
+  document.getElementById('tabPermissoes').classList.toggle('active', tab === 'permissoes');
+  if (tab === 'permissoes') renderFpFolderList();
+}
+
+// ==================== FOLDER PERMISSIONS ====================
+let _fpSelectedFolder = null;
+
+function getAllFolderNames(node, acc = []) {
+  if (!node || !node.children) return acc;
+  node.children.forEach(c => {
+    if (c.type === 'folder') {
+      acc.push(c.name);
+      getAllFolderNames(c, acc);
+    }
+  });
+  return acc;
+}
+
+async function renderFpFolderList() {
+  const list = document.getElementById('fpFolderList');
+  const perms = await getPermissoes();
+  const folders = getAllFolderNames(fs);
+  if (!folders.length) {
+    list.innerHTML = '<div style="color:var(--text3);font-size:11px;padding:10px 0">Nenhuma pasta encontrada.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  folders.forEach(name => {
+    const p = perms[name];
+    const isLocked = p && p.open === false;
+    const div = document.createElement('div');
+    div.className = 'fp-folder-item' + (_fpSelectedFolder === name ? ' selected' : '');
+    div.innerHTML = `
+      <span style="font-size:14px">${isLocked ? '🔒' : '📁'}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+      ${isLocked ? '<span style="font-size:9px;color:#e8820c;font-weight:700">RESTRITA</span>' : ''}
+    `;
+    div.onclick = () => { _fpSelectedFolder = name; renderFpFolderList(); renderFpUserList(name); };
+    list.appendChild(div);
+  });
+}
+
+async function renderFpUserList(folderName) {
+  const userListEl = document.getElementById('fpUserList');
+  const saveRow = document.getElementById('fpSaveRow');
+  const usuarios = await getUsuarios();
+  const perms = await getPermissoes();
+  const p = perms[folderName] || { open: true, users: [] };
+  const nonAdmins = usuarios.filter(u => !u.isAdmin && u.aprovado !== false);
+
+  userListEl.innerHTML = `
+    <div style="margin-bottom:10px;padding:8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)">
+      <label class="fp-user-row" style="cursor:pointer;font-weight:600">
+        <input type="checkbox" class="fp-checkbox" id="fpOpenCheck" ${p.open !== false ? 'checked' : ''}>
+        <span>🌐 Pasta aberta (todos os usuários aprovados)</span>
+      </label>
+    </div>
+    <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Acesso individual</div>
+    ${nonAdmins.length === 0 ? '<div style="color:var(--text3);font-size:11px;padding:4px 0">Nenhum usuário não-admin aprovado.</div>' :
+      nonAdmins.map(u => `
+        <label class="fp-user-row" style="cursor:pointer">
+          <input type="checkbox" class="fp-checkbox fp-user-check" data-user="${u.usuario}"
+            ${(Array.isArray(p.users) && p.users.includes(u.usuario)) || p.open !== false ? 'checked' : ''}>
+          <span>${u.usuario}</span>
+        </label>
+      `).join('')
+    }
+    <div style="font-size:10px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      🔑 Admins sempre têm acesso total.
+    </div>
+  `;
+  saveRow.style.display = 'block';
+}
+
+async function fpSavePermissions() {
+  if (!_fpSelectedFolder) return;
+  const perms = await getPermissoes(true);
+  const openCheck = document.getElementById('fpOpenCheck');
+  const isOpen = openCheck?.checked ?? true;
+  const selectedUsers = Array.from(document.querySelectorAll('.fp-user-check'))
+    .filter(cb => cb.checked)
+    .map(cb => cb.dataset.user);
+
+  perms[_fpSelectedFolder] = { open: isOpen, users: isOpen ? [] : selectedUsers };
+
+  try {
+    await savePermissoes(perms);
+    toast(`Permissões de "${_fpSelectedFolder}" salvas!`, 'success');
+    renderFpFolderList();
+  } catch(e) {
+    toast('Erro ao salvar: ' + e.message, 'error');
+  }
+}
+
+// Fechar ao clicar no fundo
+document.getElementById('userManagerOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeUserManager();
+});
+
 // ==================== DRIVE LINK MODAL ====================
 function openDriveLinkModal() {
   const overlay = document.getElementById('modalOverlay');
@@ -2595,10 +4083,36 @@ function createDriveLink() {
   toast(`"${name}" adicionado com sucesso!`, 'success');
 }
 
+// ==================== RESPONSIVE SIDEBAR ====================
+function toggleSidebar() {
+  const sidebar  = document.querySelector('.sidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  const isOpen   = sidebar.classList.contains('open');
+  if (isOpen) { closeSidebar(); } else { openSidebarDrawer(); }
+}
+
+function openSidebarDrawer() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('sidebarBackdrop').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+// Close sidebar on navigation on mobile
+const _origNavigateTo = navigateTo;
+
 // ==================== INIT ====================
 render();
-toast('MedDocs carregado com sucesso!', 'success');
+toast('SusDocs carregado com sucesso!', 'success');
+// Seed the initial browser history state so the back button works right away
+window.history.replaceState({ navPath: ['Início'] }, '', '#' + encodeURIComponent('Início'));
+// Seed initial browser history entry so back button works from the start
+window.history.replaceState({ navPath: ['Início'] }, '', '#' + encodeURIComponent('Início'));
 </script>
 </body>
 </html>
-
